@@ -1,0 +1,87 @@
+/* Design System CSS variables */
+:root {
+  /* Font Families */
+  --font-title: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Theme: Dark (Default) */
+  --bg-primary: #12121a;
+  --bg-secondary: #1a1a26;
+  --bg-tertiary: #242436;
+  --bg-desktop: #08080d;
+  --border-color: #2b2b3f;
+  
+  --text-primary: #ffffff;
+  --text-secondary: #9ea4c1;
+  --text-muted: #626780;
+  
+  /* Primary HSL (Paytm Blue / Google Pay Blue-Purple Accent) */
+  --primary-hue: 220;
+  --primary-sat: 85%;
+  --primary-light: 57%;
+  
+  --primary: hsl(var(--primary-hue), var(--primary-sat), var(--primary-light));
+  --primary-hover: hsl(var(--primary-hue), var(--primary-sat), calc(var(--primary-light) - 8%));
+  --primary-soft: rgba(30, 116, 253, 0.12);
+  
+  /* System Status Colors */
+  --success: #00d28a;
+  --success-soft: rgba(0, 210, 138, 0.12);
+  --warning: #ffaa00;
+  --warning-soft: rgba(255, 170, 0, 0.12);
+  --danger: #ff4d6b;
+  --danger-soft: rgba(255, 77, 107, 0.12);
+  --info: #00c6ff;
+  --info-soft: rgba(0, 198, 255, 0.12);
+
+  /* Shadows & Glassmorphism */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --glass-bg: rgba(26, 26, 38, 0.85);
+  --glass-blur: blur(16px);
+
+  /* Rounded Corners */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Navigation Heights */
+  --header-height: 56px;
+  --bottom-nav-height: 64px;
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Light Theme Variables overrides */
+[data-theme="light"] {
+  --bg-primary: #f5f6fa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0f2f8;
+  --bg-desktop: #e3e6f0;
+  --border-color: #e2e5f0;
+  
+  --text-primary: #1c1d22;
+  --text-secondary: #5a5f73;
+  --text-muted: #8a90a6;
+  
+  --primary-hue: 220;
+  --primary-sat: 90%;
+  --primary-light: 50%;
+  
+  --primary-soft: rgba(10, 88, 240, 0.08);
+  --success-soft: rgba(0, 210, 138, 0.08);
+  --warning-soft: rgba(255, 170, 0, 0.08);
+  --danger-soft: rgba(255, 77, 107, 0.08);
+  --info-soft: rgba(0, 198, 255, 0.08);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --glass-bg: rgba(255, 255, 255, 0.9);
+}
