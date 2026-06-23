@@ -6,13 +6,12 @@ import Input from '../../../components/common/Input';
 import Select from '../../../components/common/Select';
 import Button from '../../../components/common/Button';
 import SearchBar from '../../../components/common/SearchBar';
-import Badge from '../../../components/common/Badge';
 import SegmentedControl from '../../../components/common/SegmentedControl';
 import { ProductVariant } from '../../../types/variant.types';
 
 export const InventoryPage: React.FC = () => {
   const { 
-    products, variants, units, valuation, lowStockAlerts, adjustStockLevel, categories
+    products, variants, units, lowStockAlerts, adjustStockLevel, categories
   } = useInventory();
 
   const [activeTab, setActiveTab] = useState<'exchanged' | 'prepared'>('exchanged');

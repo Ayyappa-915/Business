@@ -69,7 +69,7 @@ export const MobileLayout: React.FC = () => {
     if (isNotificationsOpen) {
       setLocalNotifications(notifications.slice(0, 20));
     }
-  }, [isNotificationsOpen]);
+  }, [isNotificationsOpen, notifications]);
 
   // Auto-mark notifications as read when the drawer is opened
   useEffect(() => {

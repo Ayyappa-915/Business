@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DollarSign, Percent, TrendingUp, AlertTriangle, ArrowRight, Wallet, ShoppingBag, CreditCard, Truck, Activity, Package, Clock, CheckCircle2 } from 'lucide-react';
 import { useDashboard } from '../../../hooks/useDashboard';
-import { useAnalytics } from '../../../hooks/useAnalytics';
 import { analyticsEngine } from '../../../services/analytics/analyticsEngine';
 import DashboardCard from '../../../components/cards/DashboardCard';
 import SalesChart from '../../../components/charts/SalesChart';

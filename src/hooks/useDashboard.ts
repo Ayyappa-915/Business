@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useAppSelector, useAppDispatch } from '../app/hooks';
 import { analyticsEngine } from '../services/analytics/analyticsEngine';
 import { selectLowStockAlerts } from '../features/inventory/inventorySlice';
@@ -65,9 +65,9 @@ export const useDashboard = () => {
     return list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }, [sales, purchases, lowStockAlerts, variants, readNotificationIds]);
 
-  const markAsRead = (ids: string[]) => {
+  const markAsRead = useCallback((ids: string[]) => {
     dispatch(markNotificationsAsRead(ids));
-  };
+  }, [dispatch]);
 
   return {
     sales,
