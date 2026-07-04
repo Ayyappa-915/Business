@@ -79,7 +79,7 @@ export const InventoryCard: React.FC<InventoryCardProps> = ({
                 const baseStock = variant.stock * (variant.conversionFactor || 1);
                 return (
                   <p style={{ fontSize: '1.25rem', fontWeight: 800, color: isLowStock ? 'var(--warning)' : 'var(--text-primary)', fontFamily: 'var(--font-title)' }}>
-                    {baseStock.toFixed(2)} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)' }}>kg</span>
+                    {baseStock.toFixed(2)} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)' }}>{unit?.abbreviation || 'pcs'}</span>
                   </p>
                 );
               })() : (

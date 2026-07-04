@@ -34,7 +34,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const totalStockDisplay = (() => {
     if (product.hasSharedStock) {
       const baseStock = variants[0] ? variants[0].stock * (variants[0].conversionFactor || 1) : 0;
-      return `${baseStock.toFixed(2)} kg`;
+      return `${baseStock.toFixed(2)} ${unit?.abbreviation || 'pcs'}`;
     }
     if (product.hasVariants) {
       return variants.map(v => {
@@ -139,7 +139,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                       ? ` (${v.weightStock.toFixed(2)} kg)` 
                       : '';
                     if (product.hasSharedStock) {
-                      return `Stock: ${baseStock.toFixed(2)} kg (Shared) • `;
+                      return `Stock: ${baseStock.toFixed(2)} ${unit?.abbreviation || 'pcs'} (Shared) • `;
                     }
                     return `Stock: ${v.stock.toFixed(2)} ${displayUnit}${weightStockStr} • `;
                   })() : ''}
