@@ -167,11 +167,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       }
 
       if (hasSharedStock) {
-        const totalBaseStock = variantsList.reduce((sum, v) => {
-          const factor = v.conversionFactor || 1;
-          const stockVal = v.stock || 0;
-          return sum + (stockVal * factor);
-        }, 0);
+        // Find base variant (conversionFactor = 1) or fallback to first variant with stock
+        const baseVariant = variantsList.find(v => v.conversionFactor === 1) || variantsList.find(v => (v.stock || 0) > 0) || variantsList[0];
+        const totalBaseStock = baseVariant ? ((baseVariant.stock || 0) * (baseVariant.conversionFactor || 1)) : 0;
 
         finalVariants = variantsList.map(v => {
           const factor = v.conversionFactor || 1;
@@ -186,6 +184,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             variantUnit: v.variantUnit,
             lowStockThreshold: v.lowStockThreshold || 5,
             sku: v.sku,
+            purpose: v.purpose || 'both',
             createdAt: v.createdAt || new Date().toISOString(),
             updatedAt: new Date().toISOString()
           };
@@ -201,6 +200,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           variantUnit: v.variantUnit,
           lowStockThreshold: v.lowStockThreshold || 5,
           sku: v.sku,
+          purpose: v.purpose || 'both',
           createdAt: v.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }));
@@ -246,8 +246,19 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         options={categoryOptions}
         value={categoryId}
         onChange={(e) => {
-          setCategoryId(e.target.value);
+          const catId = e.target.value;
+          setCategoryId(catId);
           setSubcategoryId('');
+          
+          // Auto-detect default stockMode from selected Category
+          const selectedCat = categories.find(c => c.id === catId);
+          if (selectedCat) {
+            if (selectedCat.stockMode === 'shared') {
+              setHasSharedStock(true);
+            } else if (selectedCat.stockMode === 'independent') {
+              setHasSharedStock(false);
+            }
+          }
         }}
         placeholder="Choose Category..."
       />

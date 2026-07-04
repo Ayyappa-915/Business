@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Trash2, Plus, Package, ChefHat, BookOpen, PenLine } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { addPurchase } from '../../features/db/dbSlice';
+import { addPurchase, addExpense } from '../../features/db/dbSlice';
 import { Purchase, PurchaseItem, FreePurchaseItem } from '../../types/purchase.types';
 import Input from '../common/Input';
 import Select from '../common/Select';
@@ -47,12 +47,16 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
   const [selectedVariantId, setSelectedVariantId] = useState('');
   const [catalogQty, setCatalogQty] = useState('1');
   const [catalogCost, setCatalogCost] = useState('');
+  const [catalogTotalCost, setCatalogTotalCost] = useState('');
+  const [catalogPieces, setCatalogPieces] = useState('');
 
   // ── Free-form entry fields ──────────────────────────────────────────────
   const [freeItemName, setFreeItemName] = useState('');
   const [freeQty, setFreeQty] = useState('1');
   const [freeUnit, setFreeUnit] = useState('pcs');
   const [freeCost, setFreeCost] = useState('');
+  const [freeTotalCost, setFreeTotalCost] = useState('');
+  const [freePieces, setFreePieces] = useState('');
 
   // ── Unified cart ────────────────────────────────────────────────────────
   const [cart, setCart] = useState<CartEntry[]>([]);
@@ -72,14 +76,11 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
 
   // ── Derived options ─────────────────────────────────────────────────────
   // Only exchanged, stock-tracked products
-  const catalogProducts = products.filter(p => {
-    const cat = categories.find(c => c.id === p.categoryId);
-    return cat?.type === 'exchanged' && p.isStockTracked !== false;
-  });
+  const catalogProducts = products;
   const productOptions = catalogProducts.map(p => ({ value: p.id, label: p.name }));
 
-  // Variants for selected product
-  const productVariants = variants.filter(v => v.productId === selectedProductId && v.purpose !== 'sell');
+  // Variants for selected product (allow purchasing any variant regardless of purpose)
+  const productVariants = variants.filter(v => v.productId === selectedProductId);
   const product = products.find(p => p.id === selectedProductId);
   const variantOptions = productVariants.map(v => {
     const cleanedVarName = product && v.name.toLowerCase().startsWith(product.name.toLowerCase())
@@ -106,7 +107,67 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
   const handleVariantChange = (id: string) => {
     setSelectedVariantId(id);
     const v = variants.find(v => v.id === id);
-    if (v) setCatalogCost(v.cost.toString());
+    if (v) {
+      setCatalogCost(v.cost.toString());
+      const qty = parseFloat(catalogQty);
+      if (!isNaN(qty)) {
+        setCatalogTotalCost((qty * v.cost).toFixed(2));
+      }
+    }
+  };
+
+  const handleCatalogQtyChange = (val: string) => {
+    setCatalogQty(val);
+    const qty = parseFloat(val);
+    const cost = parseFloat(catalogCost);
+    if (!isNaN(qty) && !isNaN(cost)) {
+      setCatalogTotalCost((qty * cost).toFixed(2));
+    }
+  };
+
+  const handleCatalogCostChange = (val: string) => {
+    setCatalogCost(val);
+    const qty = parseFloat(catalogQty);
+    const cost = parseFloat(val);
+    if (!isNaN(qty) && !isNaN(cost)) {
+      setCatalogTotalCost((qty * cost).toFixed(2));
+    }
+  };
+
+  const handleCatalogTotalCostChange = (val: string) => {
+    setCatalogTotalCost(val);
+    const qty = parseFloat(catalogQty);
+    const total = parseFloat(val);
+    if (!isNaN(qty) && qty > 0 && !isNaN(total)) {
+      setCatalogCost((total / qty).toFixed(2));
+    }
+  };
+
+  const handleFreeQtyChange = (val: string) => {
+    setFreeQty(val);
+    const qty = parseFloat(val);
+    const cost = parseFloat(freeCost);
+    if (!isNaN(qty) && !isNaN(cost)) {
+      setFreeTotalCost((qty * cost).toFixed(2));
+    }
+  };
+
+  const handleFreeCostChange = (val: string) => {
+    setFreeCost(val);
+    const qty = parseFloat(freeQty);
+    const cost = parseFloat(val);
+    if (!isNaN(qty) && !isNaN(cost)) {
+      setFreeTotalCost((qty * cost).toFixed(2));
+    }
+  };
+
+  const handleFreeTotalCostChange = (val: string) => {
+    setFreeTotalCost(val);
+    const qty = parseFloat(freeQty);
+    const total = parseFloat(val);
+    if (!isNaN(qty) && qty > 0 && !isNaN(total)) {
+      setFreeCost((total / qty).toFixed(2));
+    }
   };
 
   // ── Add catalog item to cart ────────────────────────────────────────────
@@ -119,19 +180,28 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
     if (isNaN(cpu) || cpu < 0) { setError('Cost must be 0 or more.'); return; }
 
     const variant = variants.find(v => v.id === selectedVariantId);
-    if (variant && variant.purpose === 'sell') {
-      setError('Cannot purchase a "Sell Only" variant.');
-      return;
-    }
     const product = products.find(p => p.id === selectedProductId);
     const label = `${product?.name} — ${variant?.name}`;
+
+    const piecesVal = catalogPieces ? parseInt(catalogPieces) : undefined;
+    if (piecesVal !== undefined && (isNaN(piecesVal) || piecesVal <= 0)) {
+      setError('Pieces count must be greater than 0.');
+      return;
+    }
+    const weightVal = product?.unitId === 'kg' ? qty : undefined;
 
     // Check if same variant already in cart → update qty instead
     const existing = cart.findIndex(e => e.mode === 'catalog' && e.item.variantId === selectedVariantId);
     if (existing !== -1) {
       const updated = [...cart];
       const entry = updated[existing] as { mode: 'catalog'; item: PurchaseItem; label: string; costPerUnit: number };
-      entry.item = { ...entry.item, quantity: entry.item.quantity + qty, costPrice: cpu };
+      entry.item = { 
+        ...entry.item, 
+        quantity: entry.item.quantity + qty, 
+        costPrice: cpu,
+        pieces: piecesVal ? (entry.item.pieces || 0) + piecesVal : entry.item.pieces,
+        weight: weightVal ? (entry.item.weight || 0) + weightVal : entry.item.weight
+      };
       entry.costPerUnit = cpu;
       setCart(updated);
     } else {
@@ -139,7 +209,14 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
         ...prev,
         {
           mode: 'catalog',
-          item: { productId: selectedProductId, variantId: selectedVariantId, quantity: qty, costPrice: cpu },
+          item: { 
+            productId: selectedProductId, 
+            variantId: selectedVariantId, 
+            quantity: qty, 
+            costPrice: cpu,
+            pieces: piecesVal,
+            weight: weightVal
+          },
           label,
           costPerUnit: cpu,
         },
@@ -149,6 +226,8 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
     setSelectedVariantId('');
     setCatalogQty('1');
     setCatalogCost('');
+    setCatalogTotalCost('');
+    setCatalogPieces('');
     setError('');
   };
 
@@ -160,16 +239,33 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
     if (isNaN(qty) || qty <= 0) { setError('Quantity must be > 0.'); return; }
     if (isNaN(cpu) || cpu < 0) { setError('Cost must be 0 or more.'); return; }
 
+    const piecesVal = freePieces ? parseInt(freePieces) : undefined;
+    if (piecesVal !== undefined && (isNaN(piecesVal) || piecesVal <= 0)) {
+      setError('Pieces count must be greater than 0.');
+      return;
+    }
+    const weightVal = freeUnit === 'kg' ? qty : undefined;
+
     setCart(prev => [
       ...prev,
       {
         mode: 'free',
-        item: { name: freeItemName.trim(), quantity: qty, unit: freeUnit, costPerUnit: cpu, totalCost: qty * cpu },
+        item: { 
+          name: freeItemName.trim(), 
+          quantity: qty, 
+          unit: freeUnit, 
+          costPerUnit: cpu, 
+          totalCost: qty * cpu,
+          pieces: piecesVal,
+          weight: weightVal
+        },
       },
     ]);
     setFreeItemName('');
     setFreeQty('1');
     setFreeCost('');
+    setFreeTotalCost('');
+    setFreePieces('');
     setError('');
   };
 
@@ -210,9 +306,10 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
 
       const catalogTotal = catalogItems.reduce((s, i) => s + i.quantity * i.costPrice, 0);
       const freeTotal = freeItems.reduce((s, i) => s + i.totalCost, 0);
+      const purchaseId = 'pur_' + Math.random().toString(36).substr(2, 9);
 
       const newPurchase: Purchase = {
-        id: 'pur_' + Math.random().toString(36).substr(2, 9),
+        id: purchaseId,
         type: 'exchanged',
         items: catalogItems,             // catalog-linked → triggers stock auto-update
         exchangedItems: freeItems,       // free-form → just expense tracking
@@ -225,27 +322,31 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+
       dispatch(addPurchase(newPurchase));
       onSuccess();
     } else {
       if (!selectedCategoryId) { setError('Please select a prepared category.'); return; }
       if (preparedItems.length === 0) { setError('Add at least one ingredient.'); return; }
-      const totalAmount = preparedItems.reduce((s, i) => s + i.cost, 0);
+      const preparedTotal = preparedItems.reduce((s, i) => s + i.cost, 0);
+      const purchaseId = 'pur_' + Math.random().toString(36).substr(2, 9);
+
       const newPurchase: Purchase = {
-        id: 'pur_' + Math.random().toString(36).substr(2, 9),
+        id: purchaseId,
         type: 'prepared',
         categoryId: selectedCategoryId,
         preparedItems,
         supplierName: supplierName.trim() || undefined,
         purchaseDate: new Date().toISOString(),
         items: [],
-        totalAmount,
+        totalAmount: preparedTotal,
         paymentStatus,
         paymentMethod,
         notes: notes.trim() || undefined,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+
       dispatch(addPurchase(newPurchase));
       onSuccess();
     }
@@ -361,22 +462,41 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
               )}
 
               {selectedVariantId && (
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <Input
-                    label="Quantity"
-                    type="number"
-                    placeholder="1"
-                    value={catalogQty}
-                    onChange={(e) => setCatalogQty(e.target.value)}
-                    style={{ flex: 1 }}
-                  />
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <Input
+                      label={`Quantity (${product?.unitId || 'pcs'})`}
+                      type="number"
+                      placeholder="1"
+                      value={catalogQty}
+                      onChange={(e) => handleCatalogQtyChange(e.target.value)}
+                      style={{ flex: 1 }}
+                    />
+                    <Input
+                      label="Pieces Count (Optional, e.g. 15 Hens)"
+                      type="number"
+                      placeholder="Optional"
+                      value={catalogPieces}
+                      onChange={(e) => setCatalogPieces(e.target.value)}
+                      style={{ flex: 1 }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
                     <Input
                       label="Cost per Unit (₹)"
                       type="number"
                       placeholder="0.00"
                       value={catalogCost}
-                      onChange={(e) => setCatalogCost(e.target.value)}
+                      onChange={(e) => handleCatalogCostChange(e.target.value)}
+                      style={{ flex: 1 }}
+                    />
+                    <Input
+                      label="Total Item Cost (₹)"
+                      type="number"
+                      placeholder="0.00"
+                      value={catalogTotalCost}
+                      onChange={(e) => handleCatalogTotalCostChange(e.target.value)}
+                      style={{ flex: 1 }}
                     />
                   </div>
                 </div>
@@ -423,7 +543,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
                   type="number"
                   placeholder="1"
                   value={freeQty}
-                  onChange={(e) => setFreeQty(e.target.value)}
+                  onChange={(e) => handleFreeQtyChange(e.target.value)}
                   style={{ flex: 1 }}
                 />
                 <Select
@@ -431,24 +551,34 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
                   options={UNIT_OPTIONS}
                   value={freeUnit}
                   onChange={(e) => setFreeUnit(e.target.value)}
-                  style={{ flex: 1.5 }}
+                  style={{ flex: 1 }}
+                />
+                <Input
+                  label="Pieces (Optional)"
+                  type="number"
+                  placeholder="Optional"
+                  value={freePieces}
+                  onChange={(e) => setFreePieces(e.target.value)}
+                  style={{ flex: 1 }}
                 />
               </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <Input
                   label="Cost per Unit (₹)"
                   type="number"
                   placeholder="0.00"
                   value={freeCost}
-                  onChange={(e) => setFreeCost(e.target.value)}
+                  onChange={(e) => handleFreeCostChange(e.target.value)}
                   style={{ flex: 1 }}
                 />
-                <div style={{ flex: 1, height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 12px', backgroundColor: 'var(--bg-tertiary)', border: '1.5px solid var(--border-color)', borderRadius: 'var(--radius-md)', marginBottom: '16px' }}>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Item Total</span>
-                  <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.95rem' }}>
-                    ₹{((parseFloat(freeQty) || 0) * (parseFloat(freeCost) || 0)).toFixed(2)}
-                  </span>
-                </div>
+                <Input
+                  label="Total Cost (₹)"
+                  type="number"
+                  placeholder="0.00"
+                  value={freeTotalCost}
+                  onChange={(e) => handleFreeTotalCostChange(e.target.value)}
+                  style={{ flex: 1 }}
+                />
               </div>
               <Button type="button" variant="outline" size="sm" onClick={handleAddFreeItem} leftIcon={<Plus size={14} />}>
                 Add to Bill

@@ -12,4 +12,5 @@ export interface ProductVariant extends BaseEntity {
   conversionFactor?: number;
   variantUnit?: string;
   purpose?: 'both' | 'buy' | 'sell';
+  weightStock?: number; // Tracks total weight in kg alongside pieces count
 }

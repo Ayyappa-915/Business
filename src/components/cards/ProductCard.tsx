@@ -30,12 +30,54 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const totalStock = product.hasSharedStock
     ? (variants[0] ? variants[0].stock * (variants[0].conversionFactor || 1) : 0)
     : variants.reduce((sum, v) => sum + v.stock, 0);
+
+  const totalStockDisplay = (() => {
+    if (product.hasSharedStock) {
+      const baseStock = variants[0] ? variants[0].stock * (variants[0].conversionFactor || 1) : 0;
+      return `${baseStock.toFixed(2)} kg`;
+    }
+    if (product.hasVariants) {
+      return variants.map(v => {
+        const isHens = v.name.toLowerCase().includes('hen') || 
+                       v.name.toLowerCase().includes('live') ||
+                       product.name.toLowerCase().includes('hen') ||
+                       product.name.toLowerCase().includes('live') ||
+                       v.variantUnit?.toLowerCase() === 'pcs' ||
+                       unit?.abbreviation?.toLowerCase() === 'pcs';
+        const vUnit = isHens ? 'pcs' : (v.variantUnit || unit?.abbreviation || 'pcs');
+        const weightStr = (isHens && v.weightStock !== undefined && v.weightStock > 0)
+          ? ` (${v.weightStock.toFixed(2)} kg)`
+          : '';
+        return `${v.stock.toFixed(2)} ${vUnit}${weightStr}`;
+      }).join('  |  ');
+    } else {
+      const v = variants[0];
+      const isHens = v && (v.name.toLowerCase().includes('hen') || 
+                     v.name.toLowerCase().includes('live') ||
+                     product.name.toLowerCase().includes('hen') ||
+                     product.name.toLowerCase().includes('live') ||
+                     v.variantUnit?.toLowerCase() === 'pcs' ||
+                     unit?.abbreviation?.toLowerCase() === 'pcs');
+      const vUnit = isHens ? 'pcs' : (unit?.abbreviation || 'pcs');
+      const weightStr = (isHens && v && v.weightStock !== undefined && v.weightStock > 0)
+        ? ` (${v.weightStock.toFixed(2)} kg)`
+        : '';
+      return `${totalStock.toFixed(2)} ${vUnit}${weightStr}`;
+    }
+  })();
   const minPrice = Math.min(...variants.map(v => v.price));
   const maxPrice = Math.max(...variants.map(v => v.price));
-  const priceDisplay = minPrice === maxPrice ? `₹${minPrice}` : `₹${minPrice} - ₹${maxPrice}`;
+  const priceDisplay = minPrice === maxPrice ? `₹${minPrice.toFixed(2)}` : `₹${minPrice.toFixed(2)} - ₹${maxPrice.toFixed(2)}`;
 
   // Check if any variant is running low on stock
-  const isAnyLow = variants.some(v => v.stock <= v.lowStockThreshold);
+  const isAnyLow = variants.some(v => {
+    const isHens = v.name.toLowerCase().includes('hen') || 
+                   v.name.toLowerCase().includes('live') ||
+                   product.name.toLowerCase().includes('hen') ||
+                   product.name.toLowerCase().includes('live') ||
+                   v.variantUnit?.toLowerCase() === 'pcs';
+    return isHens && v.weightStock !== undefined ? v.weightStock <= v.lowStockThreshold : v.stock <= v.lowStockThreshold;
+  });
   const isAllOut = totalStock === 0;
 
   const displayedVariants = isExpanded ? variants : variants.slice(0, 3);
@@ -84,10 +126,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               <div key={v.id} className="flex-between" style={{ paddingLeft: '4px', gap: '8px', flexWrap: 'wrap', borderBottom: '1px dashed var(--border-color)', paddingBottom: '6px', paddingTop: '2px' }}>
                 <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{variantLabel}</span>
                 <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
-                  {product.isStockTracked !== false ? `Stock: ${v.stock} ${v.variantUnit || unit?.abbreviation || 'pcs'} • ` : ''}
-                  Price: ₹{v.price}
-                  {product.isStockTracked !== false ? ` • Cost: ₹${v.cost}` : ''}
-                  {product.hasSharedStock && v.conversionFactor !== undefined && ` • Contains: ${v.conversionFactor} ${unit?.abbreviation || 'pcs'}`}
+                  {product.isStockTracked !== false ? (() => {
+                    const isHens = v.name.toLowerCase().includes('hen') || 
+                                   v.name.toLowerCase().includes('live') ||
+                                   product.name.toLowerCase().includes('hen') ||
+                                   product.name.toLowerCase().includes('live') ||
+                                   v.variantUnit?.toLowerCase() === 'pcs' ||
+                                   unit?.abbreviation?.toLowerCase() === 'pcs';
+                    const displayUnit = isHens ? 'pcs' : (v.variantUnit || unit?.abbreviation || 'pcs');
+                    const baseStock = v.stock * (v.conversionFactor || 1);
+                    const weightStockStr = (isHens && v.weightStock !== undefined && v.weightStock > 0) 
+                      ? ` (${v.weightStock.toFixed(2)} kg)` 
+                      : '';
+                    if (product.hasSharedStock) {
+                      return `Stock: ${baseStock.toFixed(2)} kg (Shared) • `;
+                    }
+                    return `Stock: ${v.stock.toFixed(2)} ${displayUnit}${weightStockStr} • `;
+                  })() : ''}
+                  Price: ₹{v.price.toFixed(2)}
+                  {product.isStockTracked !== false ? ` • Cost: ₹${v.cost.toFixed(2)}` : ''}
+                  {product.hasSharedStock && v.conversionFactor !== undefined && ` • Contains: ${v.conversionFactor.toFixed(2)} ${unit?.abbreviation || 'pcs'}`}
                 </span>
               </div>
             );
@@ -124,9 +182,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {product.isStockTracked !== false ? (
             <>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Total Stock</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>
-                  {totalStock} {unit?.abbreviation || 'pcs'}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', marginTop: '2px' }}>
+                <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  {totalStockDisplay}
                 </span>
                 {isAllOut ? (
                   <Badge variant="danger">Out of stock</Badge>

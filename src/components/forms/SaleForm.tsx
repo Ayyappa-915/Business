@@ -256,6 +256,7 @@ export const SaleForm: React.FC<SaleFormProps> = ({ onSuccess }) => {
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             style={{ flex: 1 }}
+            helperText="Price can be changed directly (e.g. Sunday chicken rate)"
           />
         </div>
         <Button type="button" variant="outline" size="sm" onClick={handleAddCartItem}>

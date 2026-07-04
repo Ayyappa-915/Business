@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppSelector } from '../../../app/hooks';
 import { useInventory } from '../../../hooks/useInventory';
+import { useAuth } from '../../../hooks/useAuth';
 import ProductCard from '../../../components/cards/ProductCard';
 import ProductForm from '../../../components/forms/ProductForm';
 import SearchBar from '../../../components/common/SearchBar';
@@ -10,8 +11,12 @@ import Button from '../../../components/common/Button';
 import SegmentedControl from '../../../components/common/SegmentedControl';
 import { Product } from '../../../types/product.types';
 
+import { useNotification } from '../../../context/NotificationContext';
+
 export const ProductsPage: React.FC = () => {
   const { products, variants, categories, subcategories, units, removeProduct } = useInventory();
+  const { user } = useAuth();
+  const notification = useNotification();
   
   const sales = useAppSelector(state => state.db.sales);
   const purchases = useAppSelector(state => state.db.purchases);
@@ -57,6 +62,20 @@ export const ProductsPage: React.FC = () => {
       removeProduct(deletingProductId);
       setDeletingProductId(null);
     }
+  };
+
+  const handleAttemptDelete = (prodId: string) => {
+    if (user?.role !== 'owner') {
+      notification.alert('🔒 Access Denied: Only the owner is authorized to delete products.');
+      return;
+    }
+    const prodVariants = getProductVariants(prodId);
+    const totalStock = prodVariants.reduce((sum, v) => sum + v.stock, 0);
+    if (totalStock > 0) {
+      notification.alert('❌ Cannot Delete Product: This product still has active inventory stock. All variant stock for this product must be 0 first.');
+      return;
+    }
+    setDeletingProductId(prodId);
   };
 
   const getProductVariants = (prodId: string) => {
@@ -144,7 +163,7 @@ export const ProductsPage: React.FC = () => {
               subcategory={subcategories.find(s => s.id === p.subcategoryId)}
               unit={units.find(u => u.id === p.unitId)}
               onEdit={() => setEditingProduct(p)}
-              onDelete={() => setDeletingProductId(p.id)}
+              onDelete={() => handleAttemptDelete(p.id)}
             />
           ))}
         </div>

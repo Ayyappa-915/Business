@@ -26,14 +26,14 @@ export const RegisterPage: React.FC = () => {
     { value: 'Others', label: 'Others' }
   ];
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !shopName) {
       setFormError('Please fill in all required fields.');
       return;
     }
 
-    const result = registerUser(name, email, 'owner', shopName);
+    const result = await registerUser(name, email, 'owner', shopName);
     if (result.success) {
       // Add custom businessType properties to state
       navigate(ROUTES.DASHBOARD);

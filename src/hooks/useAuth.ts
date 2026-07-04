@@ -8,49 +8,61 @@ import {
   updateProfile
 } from '../features/auth/authSlice';
 import { User, UserRole } from '../types/auth.types';
+import { api } from '../services/api';
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
   const authState = useAppSelector((state) => state.auth);
-  const dbUsers = useAppSelector((state) => state.db.users);
 
-  const loginUser = (email: string, role: UserRole) => {
+  const loginUser = async (email: string, role: UserRole) => {
     dispatch(loginStart());
-    
-    // Mock user login database search
-    const matchedUser = dbUsers.find(u => u.email === email && u.role === role);
-    
-    if (matchedUser) {
-      dispatch(loginSuccess({ user: matchedUser, token: 'mock_token_' + Date.now() }));
-      return { success: true };
-    } else {
-      // Auto-create user if not found for easy testing
-      const newUser: User = {
-        id: 'user_' + Math.random().toString(36).substr(2, 9),
-        name: email.split('@')[0],
-        email,
-        role,
+    try {
+      const data = await api.post<{ _id: string; username: string; role: string; token: string }>('/auth/login', {
+        username: email,
+        password: 'admin123'
+      });
+      
+      const user: User = {
+        id: data._id,
+        name: data.username,
+        email: email.includes('@') ? email : `${data.username}@biztracker.com`,
+        role: data.role as UserRole,
         shopName: 'Ayyappa Super Mart',
         createdAt: new Date().toISOString()
       };
-      // For testing convenience, we succeed with a new user
-      dispatch(loginSuccess({ user: newUser, token: 'mock_token_' + Date.now() }));
+
+      dispatch(loginSuccess({ user, token: data.token }));
       return { success: true };
+    } catch (err: any) {
+      dispatch(loginFailure(err.message || 'Login failed'));
+      return { success: false, error: err.message };
     }
   };
 
-  const registerUser = (name: string, email: string, role: UserRole, shopName: string) => {
+  const registerUser = async (name: string, email: string, role: UserRole, shopName: string) => {
     dispatch(loginStart());
-    const newUser: User = {
-      id: 'user_' + Math.random().toString(36).substr(2, 9),
-      name,
-      email,
-      role,
-      shopName,
-      createdAt: new Date().toISOString()
-    };
-    dispatch(registerSuccess({ user: newUser, token: 'mock_token_' + Date.now() }));
-    return { success: true };
+    try {
+      const data = await api.post<{ _id: string; username: string; role: string; token: string }>('/auth/register', {
+        username: email,
+        password: 'admin123',
+        role
+      });
+
+      const user: User = {
+        id: data._id,
+        name: data.username,
+        email,
+        role: data.role as UserRole,
+        shopName,
+        createdAt: new Date().toISOString()
+      };
+
+      dispatch(registerSuccess({ user, token: data.token }));
+      return { success: true };
+    } catch (err: any) {
+      dispatch(loginFailure(err.message || 'Registration failed'));
+      return { success: false, error: err.message };
+    }
   };
 
   const logoutUser = () => {

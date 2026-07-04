@@ -81,12 +81,27 @@ export const QuickSaleCard: React.FC<QuickSaleCardProps> = ({
 
       <div className="flex-between" style={{ marginTop: '8px', alignItems: 'flex-end' }}>
         <div>
-          {product.isStockTracked !== false ? (
-            <>
-              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Stock: {variant.stock} {variant.variantUnit || ''}</span>
-              {isOutOfStock && <span style={{ color: 'var(--danger)', fontSize: '0.65rem', display: 'block', fontWeight: 600 }}>OUT</span>}
-            </>
-          ) : (
+          {product.isStockTracked !== false ? (() => {
+            const isHens = variant.name.toLowerCase().includes('hen') || 
+                           variant.name.toLowerCase().includes('live') ||
+                           product.name.toLowerCase().includes('hen') ||
+                           product.name.toLowerCase().includes('live') ||
+                           variant.variantUnit?.toLowerCase() === 'pcs';
+            
+            const displayUnit = isHens ? 'pcs' : (variant.variantUnit || '');
+            const baseStock = variant.stock * (variant.conversionFactor || 1);
+            const weightStockStr = (isHens && variant.weightStock !== undefined && variant.weightStock > 0)
+              ? ` (${variant.weightStock.toFixed(2)} kg)`
+              : '';
+            return (
+              <>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                  Stock: {product.hasSharedStock ? `${baseStock.toFixed(2)} kg` : `${variant.stock.toFixed(2)} ${displayUnit}${weightStockStr}`}
+                </span>
+                {isOutOfStock && <span style={{ color: 'var(--danger)', fontSize: '0.65rem', display: 'block', fontWeight: 600 }}>OUT</span>}
+              </>
+            );
+          })() : (
             <span style={{ fontSize: '0.65rem', color: 'var(--success)', fontWeight: 600 }}>Fresh / Unlimited</span>
           )}
         </div>
@@ -96,7 +111,7 @@ export const QuickSaleCard: React.FC<QuickSaleCardProps> = ({
           color: isSelected ? 'var(--primary)' : 'var(--text-primary)',
           fontFamily: 'var(--font-title)'
         }}>
-          ₹{variant.price}
+          ₹{variant.price.toFixed(2)}
         </span>
       </div>
     </div>

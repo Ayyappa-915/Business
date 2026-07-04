@@ -4,6 +4,7 @@ import { LowStockAlert } from '../../types/inventory.types';
 
 export const stockCalculator = {
   calculateTotalStockValueAtCost(variants: ProductVariant[], products?: Product[]): number {
+    const prodMap = new Map(products?.map(p => [p.id, p]) || []);
     const variantsByProduct: { [productId: string]: ProductVariant[] } = {};
     variants.forEach(v => {
       if (!variantsByProduct[v.productId]) {
@@ -14,7 +15,7 @@ export const stockCalculator = {
 
     let total = 0;
     Object.entries(variantsByProduct).forEach(([productId, prodVariants]) => {
-      const prod = products?.find(p => p.id === productId);
+      const prod = prodMap.get(productId);
       if (prod && prod.hasSharedStock) {
         if (prodVariants.length > 0) {
           const anyVar = prodVariants[0];
@@ -25,7 +26,16 @@ export const stockCalculator = {
         }
       } else {
         prodVariants.forEach(v => {
-          total += v.cost * v.stock;
+          const isHens = v.name.toLowerCase().includes('hen') || 
+                         v.name.toLowerCase().includes('live') ||
+                         prod?.name.toLowerCase().includes('hen') ||
+                         prod?.name.toLowerCase().includes('live');
+          
+          if (isHens && v.weightStock !== undefined && v.weightStock > 0) {
+            total += v.cost * v.weightStock;
+          } else {
+            total += v.cost * v.stock;
+          }
         });
       }
     });
@@ -33,6 +43,7 @@ export const stockCalculator = {
   },
 
   calculateTotalStockValueAtRetail(variants: ProductVariant[], products?: Product[]): number {
+    const prodMap = new Map(products?.map(p => [p.id, p]) || []);
     const variantsByProduct: { [productId: string]: ProductVariant[] } = {};
     variants.forEach(v => {
       if (!variantsByProduct[v.productId]) {
@@ -43,18 +54,39 @@ export const stockCalculator = {
 
     let total = 0;
     Object.entries(variantsByProduct).forEach(([productId, prodVariants]) => {
-      const prod = products?.find(p => p.id === productId);
+      const prod = prodMap.get(productId);
       if (prod && prod.hasSharedStock) {
         if (prodVariants.length > 0) {
           const anyVar = prodVariants[0];
           const baseStock = anyVar.stock * (anyVar.conversionFactor || 1);
+          const costVar = prodVariants.find(v => v.purpose === 'buy' || v.purpose === 'both') || anyVar;
           const priceVar = prodVariants.find(v => v.purpose === 'sell' || v.purpose === 'both') || anyVar;
-          const retailPricePerBaseUnit = priceVar.price / (priceVar.conversionFactor || 1);
-          total += baseStock * retailPricePerBaseUnit;
+          
+          if (priceVar.purpose !== 'buy') {
+            const retailPricePerBaseUnit = priceVar.price / (priceVar.conversionFactor || 1);
+            total += baseStock * retailPricePerBaseUnit;
+          } else {
+            // Raw ingredient fallback (40% markup on cost)
+            total += baseStock * ((costVar.cost * 1.4) / (costVar.conversionFactor || 1));
+          }
         }
       } else {
         prodVariants.forEach(v => {
-          total += v.price * v.stock;
+          const isHens = v.name.toLowerCase().includes('hen') || 
+                         v.name.toLowerCase().includes('live') ||
+                         prod?.name.toLowerCase().includes('hen') ||
+                         prod?.name.toLowerCase().includes('live');
+          
+          if (isHens && v.weightStock !== undefined && v.weightStock > 0) {
+            total += (v.cost * 1.4) * v.weightStock;
+          } else {
+            if (v.purpose !== 'buy') {
+              total += v.price * v.stock;
+            } else {
+              // Raw ingredient fallback (40% markup on cost)
+              total += (v.cost * 1.4) * v.stock;
+            }
+          }
         });
       }
     });
@@ -73,13 +105,21 @@ export const stockCalculator = {
     variants.forEach(variant => {
       const product = products.find(p => p.id === variant.productId);
       if (product && product.isStockTracked !== false) {
-        if (variant.stock <= variant.lowStockThreshold) {
+        const isHens = variant.name.toLowerCase().includes('hen') || 
+                       variant.name.toLowerCase().includes('live') ||
+                       product.name.toLowerCase().includes('hen') ||
+                       product.name.toLowerCase().includes('live') ||
+                       variant.variantUnit?.toLowerCase() === 'pcs';
+        const isLow = isHens && variant.weightStock !== undefined 
+          ? variant.weightStock <= variant.lowStockThreshold 
+          : variant.stock <= variant.lowStockThreshold;
+        if (isLow) {
           alerts.push({
             productId: variant.productId,
             variantId: variant.id,
             productName: product.name,
             variantName: variant.name,
-            currentStock: variant.stock,
+            currentStock: isHens && variant.weightStock !== undefined ? variant.weightStock : variant.stock,
             threshold: variant.lowStockThreshold
           });
         }

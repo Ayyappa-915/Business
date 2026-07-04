@@ -10,17 +10,31 @@ interface InventoryCardProps {
   variant: ProductVariant;
   unit?: Unit;
   onAdjust: () => void;
+  onSlaughter?: () => void;
 }
 
 export const InventoryCard: React.FC<InventoryCardProps> = ({
   product,
   variant,
   unit,
-  onAdjust
+  onAdjust,
+  onSlaughter
 }) => {
   const isStockTracked = product.isStockTracked !== false;
-  const isLowStock = isStockTracked && variant.stock <= variant.lowStockThreshold;
-  const isOutOfStock = isStockTracked && variant.stock === 0;
+
+  const isHens = variant.name.toLowerCase().includes('hen') || 
+                 variant.name.toLowerCase().includes('live') ||
+                 product.name.toLowerCase().includes('hen') ||
+                 product.name.toLowerCase().includes('live') ||
+                 variant.variantUnit?.toLowerCase() === 'pcs' ||
+                 unit?.abbreviation?.toLowerCase() === 'pcs';
+                 
+  const isLowStock = isStockTracked && 
+    (isHens && variant.weightStock !== undefined ? variant.weightStock <= variant.lowStockThreshold : variant.stock <= variant.lowStockThreshold);
+  const isOutOfStock = isStockTracked && 
+    (isHens && variant.weightStock !== undefined ? variant.weightStock <= 0 : variant.stock <= 0);
+                 
+  const displayUnit = isHens ? 'pcs' : (variant.variantUnit || unit?.abbreviation || 'pcs');
 
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -60,30 +74,62 @@ export const InventoryCard: React.FC<InventoryCardProps> = ({
         {isStockTracked ? (
           <>
             <div>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Current Count</span>
-              <p style={{ fontSize: '1.25rem', fontWeight: 800, color: isLowStock ? 'var(--warning)' : 'var(--text-primary)', fontFamily: 'var(--font-title)' }}>
-                {variant.stock} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)' }}>{variant.variantUnit || unit?.abbreviation || 'pcs'}</span>
-              </p>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{product.hasSharedStock ? 'Shared Bulk Stock' : 'Current Count'}</span>
+              {product.hasSharedStock ? (() => {
+                const baseStock = variant.stock * (variant.conversionFactor || 1);
+                return (
+                  <p style={{ fontSize: '1.25rem', fontWeight: 800, color: isLowStock ? 'var(--warning)' : 'var(--text-primary)', fontFamily: 'var(--font-title)' }}>
+                    {baseStock.toFixed(2)} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)' }}>kg</span>
+                  </p>
+                );
+              })() : (
+                <>
+                  <p style={{ fontSize: '1.25rem', fontWeight: 800, color: isLowStock ? 'var(--warning)' : 'var(--text-primary)', fontFamily: 'var(--font-title)' }}>
+                    {variant.stock.toFixed(2)} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)' }}>{displayUnit}</span>
+                  </p>
+                  {variant.weightStock !== undefined && variant.weightStock > 0 && (
+                    <p style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-secondary)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {variant.weightStock.toFixed(2)} kg
+                    </p>
+                  )}
+                </>
+              )}
               <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px' }}>
                 {variant.purpose !== 'buy' && (
-                  <span>Price: <strong style={{ color: 'var(--success)' }}>₹{variant.price}</strong></span>
+                  <span>Price: <strong style={{ color: 'var(--success)' }}>₹{variant.price.toFixed(2)}</strong></span>
                 )}
                 {variant.purpose !== 'sell' && (
-                  <span>Cost: <strong style={{ color: 'var(--text-primary)' }}>₹{variant.cost}</strong></span>
+                  <span>Cost: <strong style={{ color: 'var(--text-primary)' }}>₹{variant.cost.toFixed(2)}</strong></span>
                 )}
-                <span>Threshold: {variant.lowStockThreshold}</span>
+                <span>Threshold: {variant.lowStockThreshold.toFixed(2)}</span>
               </div>
             </div>
-            <Button onClick={onAdjust} variant="secondary" size="sm">
-              Adjust Stock
-            </Button>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {onSlaughter && (
+                <Button 
+                  onClick={onSlaughter} 
+                  variant="outline" 
+                  size="sm"
+                  style={{ 
+                    color: 'var(--danger)', 
+                    borderColor: 'var(--danger)', 
+                    backgroundColor: 'var(--danger-soft)' 
+                  }}
+                >
+                  Slaughter
+                </Button>
+              )}
+              <Button onClick={onAdjust} variant="secondary" size="sm">
+                Adjust Stock
+              </Button>
+            </div>
           </>
         ) : (
           <>
             <div>
               <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Selling Price</span>
               <p style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-title)' }}>
-                ₹{variant.price} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)' }}>/ {unit?.abbreviation || 'pcs'}</span>
+                ₹{variant.price.toFixed(2)} <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)' }}>/ {unit?.abbreviation || 'pcs'}</span>
               </p>
               <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Fresh / Unlimited Stock</span>
             </div>

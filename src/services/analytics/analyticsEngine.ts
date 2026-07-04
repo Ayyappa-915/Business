@@ -63,7 +63,13 @@ export const analyticsEngine = {
 
     const lowStockItemsCount = variants.filter(v => {
       const prod = products.find(p => p.id === v.productId);
-      return prod ? (prod.isStockTracked !== false && v.stock <= v.lowStockThreshold) : false;
+      if (!prod || prod.isStockTracked === false) return false;
+      const isHens = v.name.toLowerCase().includes('hen') || 
+                     v.name.toLowerCase().includes('live') ||
+                     prod.name.toLowerCase().includes('hen') ||
+                     prod.name.toLowerCase().includes('live') ||
+                     v.variantUnit?.toLowerCase() === 'pcs';
+      return isHens && v.weightStock !== undefined ? v.weightStock <= v.lowStockThreshold : v.stock <= v.lowStockThreshold;
     }).length;
 
     return {
@@ -251,7 +257,13 @@ export const analyticsEngine = {
         const prod = prodMap.get(v.productId);
         if (!prod || prod.isStockTracked === false) return false;
         const cat = catMap.get(prod.categoryId);
-        return cat?.type === 'exchanged' && v.stock <= v.lowStockThreshold;
+        const isHens = v.name.toLowerCase().includes('hen') || 
+                       v.name.toLowerCase().includes('live') ||
+                       prod.name.toLowerCase().includes('hen') ||
+                       prod.name.toLowerCase().includes('live') ||
+                       v.variantUnit?.toLowerCase() === 'pcs';
+        const isLow = isHens && v.weightStock !== undefined ? v.weightStock <= v.lowStockThreshold : v.stock <= v.lowStockThreshold;
+        return cat?.type === 'exchanged' && isLow;
       }).length;
     } else {
       statusValue = categories.filter(c => c.type === 'prepared').length;

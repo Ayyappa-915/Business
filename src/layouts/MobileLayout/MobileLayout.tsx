@@ -16,6 +16,8 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { toggleTheme, selectTheme } from '../../features/settings/settingsSlice';
+import { fetchInitialData } from '../../features/db/dbSlice';
+import { useNotification } from '../../context/NotificationContext';
 import { NavLink } from 'react-router-dom';
 import { ROUTES } from '../../constants/routes';
 
@@ -37,14 +39,26 @@ export const MobileLayout: React.FC = () => {
   const theme = useAppSelector(selectTheme);
   const { user, logoutUser } = useAuth();
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+  const dbError = useAppSelector(state => (state.db as any).error);
+  const { alert: alertPopup } = useNotification();
 
   useEffect(() => {
+    if (dbError) {
+      alertPopup(dbError);
+      // Clean error immediately so it doesn't trigger again
+      const { clearDbError } = require('../../features/db/dbSlice');
+      dispatch(clearDbError());
+    }
+  }, [dbError, dispatch, alertPopup]);
+
+  useEffect(() => {
+    dispatch(fetchInitialData());
     const handleResize = () => {
       setIsDesktop(window.innerWidth >= 1024);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [dispatch]);
 
   const menuItems = [
     { name: 'Dashboard', path: ROUTES.DASHBOARD, icon: <LayoutDashboard size={18} /> },

@@ -13,16 +13,19 @@ import SegmentedControl from '../../../components/common/SegmentedControl';
 import { Sale, SaleItem } from '../../../types/sale.types';
 import { inventoryValidator } from '../../../services/inventory/inventoryValidator';
 
+import { useNotification } from '../../../context/NotificationContext';
+
 export const QuickSalePage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { products, variants, categories } = useInventory();
+  const notification = useNotification();
   
   const [activeTab, setActiveTab] = useState<'exchanged' | 'prepared'>('exchanged');
   const [search, setSearch] = useState('');
   const [selectedCatId, setSelectedCatId] = useState<string>('all');
   
   // Checkout Cart
-  const [cart, setCart] = useState<{ variantId: string; quantity: number }[]>([]);
+  const [cart, setCart] = useState<{ variantId: string; quantity: number; customPrice?: number }[]>([]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   
   // Checkout Form Details
@@ -64,14 +67,14 @@ export const QuickSalePage: React.FC = () => {
     // Validate stock
     const validation = inventoryValidator.validateSaleQuantity(variant, newQty, isTracked, false);
     if (!validation.isValid) {
-      alert(validation.error || 'Insufficient stock.');
+      notification.alert(validation.error || 'Insufficient stock.');
       return;
     }
 
     if (existingCartItem) {
       setCart(cart.map(item => item.variantId === variantId ? { ...item, quantity: newQty } : item));
     } else {
-      setCart([...cart, { variantId, quantity: 1 }]);
+      setCart([...cart, { variantId, quantity: 1, customPrice: variant.price }]);
     }
   };
 
@@ -93,7 +96,7 @@ export const QuickSalePage: React.FC = () => {
 
     const validation = inventoryValidator.validateSaleQuantity(variant, newQty, isTracked, false);
     if (!validation.isValid) {
-      alert(validation.error || 'Insufficient stock.');
+      notification.alert(validation.error || 'Insufficient stock.');
       return;
     }
 
@@ -114,7 +117,7 @@ export const QuickSalePage: React.FC = () => {
 
     const validation = inventoryValidator.validateSaleQuantity(variant, qty, isTracked, false);
     if (!validation.isValid) {
-      alert(validation.error || 'Insufficient stock.');
+      notification.alert(validation.error || 'Insufficient stock.');
       return;
     }
 
@@ -127,7 +130,8 @@ export const QuickSalePage: React.FC = () => {
   const getSubtotal = () => {
     return cart.reduce((sum, item) => {
       const v = variants.find(varItem => varItem.id === item.variantId);
-      return sum + (v ? v.price * item.quantity : 0);
+      const price = item.customPrice !== undefined ? item.customPrice : (v ? v.price : 0);
+      return sum + price * item.quantity;
     }, 0);
   };
 
@@ -143,11 +147,12 @@ export const QuickSalePage: React.FC = () => {
 
     const saleItems: SaleItem[] = cart.map(item => {
       const v = variants.find(varItem => varItem.id === item.variantId);
+      const price = item.customPrice !== undefined ? item.customPrice : (v ? v.price : 0);
       return {
         productId: v ? v.productId : '',
         variantId: item.variantId,
         quantity: item.quantity,
-        unitPrice: v ? v.price : 0,
+        unitPrice: price,
         discount: 0
       };
     });
@@ -177,7 +182,7 @@ export const QuickSalePage: React.FC = () => {
     setPaymentMethod('upi');
     setIsCheckoutOpen(false);
     
-    alert('🎉 Sale processed and checkout completed successfully!');
+    notification.alert('🎉 Sale processed and checkout completed successfully!');
   };
 
   const subtotal = getSubtotal();
@@ -294,7 +299,7 @@ export const QuickSalePage: React.FC = () => {
               Selected: {cartTotalItems} {cartTotalItems === 1 ? 'item' : 'items'}
             </span>
             <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--success)', fontFamily: 'var(--font-title)' }}>
-              ₹{getSubtotal()}
+              ₹{getSubtotal().toFixed(2)}
             </span>
           </div>
           <Button 
@@ -331,14 +336,40 @@ export const QuickSalePage: React.FC = () => {
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '0.82rem'
                 }}>
-                  <div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                     <strong>{p.name}</strong>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', display: 'block' }}>
-                      {v.name.toLowerCase().startsWith(p.name.toLowerCase()) ? v.name.slice(p.name.length).trim() : v.name} • ₹{v.price}
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                      {v.name.toLowerCase().startsWith(p.name.toLowerCase()) ? v.name.slice(p.name.length).trim() : v.name}
                     </span>
                   </div>
-                  {/* Plus minus counters with custom numeric input */}
-                  <div className="flex-align-center" style={{ gap: '10px' }}>
+                  {/* Price input and quantity counters */}
+                  <div className="flex-align-center" style={{ gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>₹</span>
+                      <input
+                        type="number"
+                        step="any"
+                        min="0"
+                        value={item.customPrice !== undefined ? item.customPrice : v.price}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setCart(cart.map(c => c.variantId === item.variantId ? { ...c, customPrice: isNaN(val) ? 0 : val } : c));
+                        }}
+                        style={{
+                          width: '56px',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: '4px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          backgroundColor: 'var(--bg-primary)',
+                          color: 'var(--success)',
+                          outline: 'none'
+                        }}
+                        placeholder="Price"
+                        title="Edit Price"
+                      />
+                    </div>
                     <button type="button" onClick={() => handleAdjustQuantity(item.variantId, -1)} style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: 'var(--border-color)', fontWeight: 700 }}>
                       -
                     </button>
@@ -421,14 +452,14 @@ export const QuickSalePage: React.FC = () => {
             borderRadius: 'var(--radius-md)',
             margin: '8px 0'
           }}>
-            <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>Subtotal: ₹{getSubtotal()}</span>
+            <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>Subtotal: ₹{getSubtotal().toFixed(2)}</span>
             <strong style={{ fontSize: '1.2rem', color: 'var(--success)', fontFamily: 'var(--font-title)' }}>
-              Final Amount: ₹{totalBill}
+              Final Amount: ₹{totalBill.toFixed(2)}
             </strong>
           </div>
 
           <Button type="submit" fullWidth variant="success" size="lg">
-            Print Bill & Record Sale (₹{totalBill})
+            Print Bill & Record Sale (₹{totalBill.toFixed(2)})
           </Button>
         </form>
       </BottomSheet>

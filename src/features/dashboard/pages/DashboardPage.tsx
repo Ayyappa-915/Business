@@ -133,10 +133,12 @@ export const DashboardPage: React.FC = () => {
           border: '1px solid var(--border-color)',
           borderBottom: '3px solid var(--danger)',
           borderRadius: 'var(--radius-md)',
-          padding: '12px 10px',
+          padding: '10px 8px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '8px',
+          justifyContent: 'space-between',
+          height: '76px',
+          boxSizing: 'border-box',
           boxShadow: 'var(--shadow-sm)',
           transition: 'all var(--transition-fast)'
         }} className="interactive">
@@ -149,13 +151,14 @@ export const DashboardPage: React.FC = () => {
               height: '22px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              flexShrink: 0
             }}>
               <CreditCard size={12} />
             </div>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}>Expenses</span>
+            <span style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Expenses</span>
           </div>
-          <strong style={{ fontSize: '1.05rem', color: 'var(--text-primary)', fontFamily: 'var(--font-title)', fontWeight: 800 }}>₹{stats.todayExpenses}</strong>
+          <strong style={{ fontSize: '1.05rem', color: 'var(--text-primary)', fontFamily: 'var(--font-title)', fontWeight: 800 }}>₹{stats.todayExpenses.toFixed(2)}</strong>
         </div>
 
         {/* Purchases Card */}
@@ -164,10 +167,12 @@ export const DashboardPage: React.FC = () => {
           border: '1px solid var(--border-color)',
           borderBottom: '3px solid var(--primary)',
           borderRadius: 'var(--radius-md)',
-          padding: '12px 10px',
+          padding: '10px 8px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '8px',
+          justifyContent: 'space-between',
+          height: '76px',
+          boxSizing: 'border-box',
           boxShadow: 'var(--shadow-sm)',
           transition: 'all var(--transition-fast)'
         }} className="interactive">
@@ -180,13 +185,14 @@ export const DashboardPage: React.FC = () => {
               height: '22px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              flexShrink: 0
             }}>
               <Truck size={12} />
             </div>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}>Purchases</span>
+            <span style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Purchases</span>
           </div>
-          <strong style={{ fontSize: '1.05rem', color: 'var(--text-primary)', fontFamily: 'var(--font-title)', fontWeight: 800 }}>₹{modeStats.todayPurchases}</strong>
+          <strong style={{ fontSize: '1.05rem', color: 'var(--text-primary)', fontFamily: 'var(--font-title)', fontWeight: 800 }}>₹{modeStats.todayPurchases.toFixed(2)}</strong>
         </div>
 
         {/* Transactions Card */}
@@ -195,10 +201,12 @@ export const DashboardPage: React.FC = () => {
           border: '1px solid var(--border-color)',
           borderBottom: '3px solid var(--success)',
           borderRadius: 'var(--radius-md)',
-          padding: '12px 10px',
+          padding: '10px 8px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '8px',
+          justifyContent: 'space-between',
+          height: '76px',
+          boxSizing: 'border-box',
           boxShadow: 'var(--shadow-sm)',
           transition: 'all var(--transition-fast)'
         }} className="interactive">
@@ -211,11 +219,12 @@ export const DashboardPage: React.FC = () => {
               height: '22px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              flexShrink: 0
             }}>
               <Activity size={12} />
             </div>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}>Tx Count</span>
+            <span style={{ fontSize: '0.62rem', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Tx Count</span>
           </div>
           <strong style={{ fontSize: '1.05rem', color: 'var(--text-primary)', fontFamily: 'var(--font-title)', fontWeight: 800 }}>{modeStats.todayTransactionsCount}</strong>
         </div>
@@ -225,21 +234,21 @@ export const DashboardPage: React.FC = () => {
       <div className="kpi-grid">
         <DashboardCard
           title="Today Sales"
-          value={`₹${modeStats.todaySales}`}
+          value={`₹${modeStats.todaySales.toFixed(2)}`}
           icon={<DollarSign size={18} />}
           trend={modeStats.salesGrowthPercentage}
           color="var(--success)"
         />
         <DashboardCard
           title="Today Profit"
-          value={`₹${modeStats.todayProfit}`}
+          value={`₹${modeStats.todayProfit.toFixed(2)}`}
           icon={<Percent size={18} />}
           trend={modeStats.profitGrowthPercentage}
           color="var(--primary)"
         />
         <DashboardCard
           title={activeTab === 'prepared' ? "Purchases Cost" : "COGS / Sales Cost"}
-          value={`₹${modeStats.todayCost}`}
+          value={`₹${modeStats.todayCost.toFixed(2)}`}
           icon={<Wallet size={18} />}
           color="var(--danger)"
         />

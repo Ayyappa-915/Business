@@ -1,9 +1,21 @@
-import { storageService, DatabaseState } from '../services/storage/storageService';
+import { DatabaseState } from '../services/storage/storageService';
 
 export const loadState = (): DatabaseState => {
-  return storageService.loadDatabase();
+  return {
+    users: [],
+    categories: [],
+    subcategories: [],
+    products: [],
+    variants: [],
+    purchases: [],
+    sales: [],
+    expenses: [],
+    adjustments: [],
+    units: [],
+    readNotificationIds: [],
+  };
 };
 
 export const saveState = (state: DatabaseState): boolean => {
-  return storageService.saveDatabase(state);
+  return true;
 };

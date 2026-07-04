@@ -333,30 +333,30 @@ export const ReportsPage: React.FC = () => {
         }}>
           <div className="flex-between">
             <span style={{ color: 'var(--text-secondary)' }}>Gross Revenues (Sales)</span>
-            <span style={{ fontWeight: 600 }}>₹{plSummary.grossRevenue}</span>
+            <span style={{ fontWeight: 600 }}>₹{plSummary.grossRevenue.toFixed(2)}</span>
           </div>
           <div className="flex-between">
             <span style={{ color: 'var(--text-secondary)' }}>{activeTab === 'prepared' ? 'Ingredients Purchases' : 'Cost of Goods Sold (COGS)'}</span>
-            <span style={{ color: 'var(--text-muted)' }}>- ₹{plSummary.costOfGoodsSold}</span>
+            <span style={{ color: 'var(--text-muted)' }}>- ₹{plSummary.costOfGoodsSold.toFixed(2)}</span>
           </div>
           {activeTab === 'exchanged' && (
             <div className="flex-between">
               <span style={{ color: 'var(--text-secondary)' }}>Actual Stock Purchases (Cash Outflow)</span>
-              <span style={{ color: 'var(--warning)', fontWeight: 600 }}>₹{plSummary.totalPurchases || 0}</span>
+              <span style={{ color: 'var(--warning)', fontWeight: 600 }}>₹{(plSummary.totalPurchases || 0).toFixed(2)}</span>
             </div>
           )}
           <div className="flex-between" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '4px' }}>
             <span style={{ fontWeight: 600 }}>Gross Profit Margin</span>
-            <span style={{ fontWeight: 600, color: 'var(--success)' }}>₹{plSummary.grossProfit}</span>
+            <span style={{ fontWeight: 600, color: 'var(--success)' }}>₹{plSummary.grossProfit.toFixed(2)}</span>
           </div>
           <div className="flex-between">
             <span style={{ color: 'var(--text-secondary)' }}>General Shop Expenses</span>
-            <span style={{ color: 'var(--danger)' }}>- ₹{plSummary.totalExpenses}</span>
+            <span style={{ color: 'var(--danger)' }}>- ₹{plSummary.totalExpenses.toFixed(2)}</span>
           </div>
           <div className="flex-between" style={{ borderTop: '1.5px solid var(--border-color)', paddingTop: '6px', marginTop: '4px' }}>
             <strong style={{ fontSize: '1rem' }}>Net Profit</strong>
             <strong style={{ fontSize: '1.1rem', color: plSummary.netProfit >= 0 ? 'var(--success)' : 'var(--danger)', fontFamily: 'var(--font-title)' }}>
-              ₹{plSummary.netProfit}
+              ₹{plSummary.netProfit.toFixed(2)}
             </strong>
           </div>
         </div>
@@ -385,7 +385,7 @@ export const ReportsPage: React.FC = () => {
             <>
               <div>
                 <span style={{ color: 'var(--text-secondary)' }}>Valuation at Retail</span>
-                <p style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--primary)' }}>₹{stockSummary.totalStockValueAtRetail}</p>
+                <p style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--primary)' }}>₹{stockSummary.totalStockValueAtRetail.toFixed(2)}</p>
               </div>
               <div>
                 <span style={{ color: 'var(--text-secondary)' }}>Stocked Items</span>
@@ -481,12 +481,12 @@ export const ReportsPage: React.FC = () => {
                   <div style={{ display: 'flex', gap: '16px', textAlign: 'right' }}>
                     <div>
                       <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Sales</span>
-                      <strong style={{ color: 'var(--text-primary)' }}>₹{period.sales}</strong>
+                      <strong style={{ color: 'var(--text-primary)' }}>₹{period.sales.toFixed(2)}</strong>
                     </div>
                     <div>
                       <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Net Profit</span>
                       <strong style={{ color: isProfitPositive ? 'var(--success)' : 'var(--danger)' }}>
-                        ₹{period.profit}
+                        ₹{period.profit.toFixed(2)}
                       </strong>
                     </div>
                   </div>
@@ -669,16 +669,16 @@ export const ReportsPage: React.FC = () => {
                 }}>
                   <div>
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', display: 'block' }}>Revenues</span>
-                    <strong style={{ fontSize: '1.1rem', color: 'var(--text-primary)' }}>₹{selectedLedgerPeriod.sales}</strong>
+                    <strong style={{ fontSize: '1.1rem', color: 'var(--text-primary)' }}>₹{selectedLedgerPeriod.sales.toFixed(2)}</strong>
                   </div>
                   <div>
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', display: 'block' }}>{activeTab === 'prepared' ? 'Ingredients Cost' : 'COGS'}</span>
-                    <strong style={{ fontSize: '1.1rem', color: 'var(--text-muted)' }}>₹{selectedLedgerPeriod.cost}</strong>
+                    <strong style={{ fontSize: '1.1rem', color: 'var(--text-muted)' }}>₹{selectedLedgerPeriod.cost.toFixed(2)}</strong>
                   </div>
                   <div style={{ gridColumn: 'span 2', borderTop: '1px solid var(--border-color)', paddingTop: '6px', marginTop: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Net Performance Margin</span>
                     <strong style={{ fontSize: '1.15rem', color: selectedLedgerPeriod.profit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                      ₹{selectedLedgerPeriod.profit}
+                      ₹{selectedLedgerPeriod.profit.toFixed(2)}
                     </strong>
                   </div>
                 </div>

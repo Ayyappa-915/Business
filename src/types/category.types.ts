@@ -5,4 +5,5 @@ export interface Category extends BaseEntity {
   description?: string;
   color?: string; // Hue or hex code for custom badges
   type: 'prepared' | 'exchanged';
+  stockMode?: 'shared' | 'independent';
 }

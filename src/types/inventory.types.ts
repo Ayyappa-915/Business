@@ -5,6 +5,7 @@ export interface StockAdjustmentLog extends BaseEntity {
   variantId: string;
   type: 'add' | 'subtract' | 'set';
   quantity: number;
+  weight?: number; // Optional weight in kg for dual-unit tracking
   reason: string; // e.g. "Damage", "Initial Stock", "Manual Correction"
   date: string;
 }

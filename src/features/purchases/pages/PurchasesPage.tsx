@@ -186,7 +186,14 @@ export const PurchasesPage: React.FC = () => {
                 {selectedPurchase.exchangedItems && selectedPurchase.exchangedItems.length > 0 ? (
                   selectedPurchase.exchangedItems.map((item, idx) => (
                     <div key={idx} className="flex-between" style={{ fontSize: '0.82rem', padding: '7px 0', borderBottom: '1px solid var(--bg-tertiary)' }}>
-                      <span style={{ fontWeight: 600 }}>{item.name}</span>
+                      <span style={{ fontWeight: 600 }}>
+                        {item.name}
+                        {item.pieces !== undefined && (
+                          <span style={{ fontWeight: 500, color: 'var(--info)', fontSize: '0.75rem', marginLeft: '6px' }}>
+                            ({item.pieces} pcs)
+                          </span>
+                        )}
+                      </span>
                       <span style={{ color: 'var(--text-secondary)' }}>{item.quantity} {item.unit} × ₹{item.costPerUnit} = <strong style={{ color: 'var(--text-primary)' }}>₹{item.totalCost.toFixed(2)}</strong></span>
                     </div>
                   ))
@@ -197,7 +204,14 @@ export const PurchasesPage: React.FC = () => {
                     const variant = variants.find(v => v.id === item.variantId);
                     return (
                       <div key={idx} className="flex-between" style={{ fontSize: '0.82rem', padding: '6px 0', borderBottom: '1px solid var(--bg-tertiary)' }}>
-                        <span>{prod ? prod.name : 'Unknown Product'} ({variant?.name})</span>
+                        <span>
+                          {prod ? prod.name : 'Unknown Product'} ({variant?.name})
+                          {item.pieces !== undefined && (
+                            <span style={{ fontWeight: 500, color: 'var(--info)', fontSize: '0.75rem', marginLeft: '6px' }}>
+                              ({item.pieces} pcs)
+                            </span>
+                          )}
+                        </span>
                         <span>{item.quantity} units @ ₹{item.costPrice}</span>
                       </div>
                     );
@@ -206,9 +220,27 @@ export const PurchasesPage: React.FC = () => {
               </div>
             )}
 
-            <div style={{ textAlign: 'right', fontWeight: 700, fontSize: '1.05rem', marginTop: '10px' }}>
-              Total Cost: ₹{selectedPurchase.totalAmount}
-            </div>
+            {(() => {
+              const itemsCost = selectedPurchase.type === 'prepared'
+                ? (selectedPurchase.preparedItems?.reduce((s, i) => s + i.cost, 0) || 0)
+                : (selectedPurchase.exchangedItems && selectedPurchase.exchangedItems.length > 0
+                    ? selectedPurchase.exchangedItems.reduce((s, i) => s + i.totalCost, 0)
+                    : selectedPurchase.items?.reduce((s, i) => s + i.quantity * i.costPrice, 0) || 0);
+              
+              return (
+                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '3px', marginTop: '10px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  <span>Items Total: ₹{itemsCost.toFixed(2)}</span>
+                  {selectedPurchase.additionalCost && (
+                    <span>
+                      + {selectedPurchase.additionalCostReason || 'Petrol / Transport'}: ₹{selectedPurchase.additionalCost.toFixed(2)}
+                    </span>
+                  )}
+                  <strong style={{ fontSize: '1.1rem', color: 'var(--success)', marginTop: '2px' }}>
+                    Total Paid Amount: ₹{selectedPurchase.totalAmount.toFixed(2)}
+                  </strong>
+                </div>
+              );
+            })()}
             {selectedPurchase.notes && (
               <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic', backgroundColor: 'var(--bg-tertiary)', padding: '10px', borderRadius: 'var(--radius-sm)' }}>
                 Notes: {selectedPurchase.notes}

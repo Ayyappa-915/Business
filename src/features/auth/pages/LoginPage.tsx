@@ -22,26 +22,25 @@ export const LoginPage: React.FC = () => {
     { value: 'cashier', label: 'Cashier' }
   ];
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
       setFormError('Please enter your email.');
       return;
     }
     
-    const result = loginUser(email, role);
+    const result = await loginUser(email, role);
     if (result.success) {
       navigate(ROUTES.DASHBOARD);
     }
   };
 
-  const handleQuickDemoLogin = (demoRole: UserRole) => {
+  const handleQuickDemoLogin = async (demoRole: UserRole) => {
     const demoEmail = demoRole === 'owner' ? 'owner@biztracker.com' : 'cashier@biztracker.com';
     setEmail(demoEmail);
     setRole(demoRole);
     
-    // Immediate login
-    const result = loginUser(demoEmail, demoRole);
+    const result = await loginUser(demoEmail, demoRole);
     if (result.success) {
       navigate(ROUTES.DASHBOARD);
     }

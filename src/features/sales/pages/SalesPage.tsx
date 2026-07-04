@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks';
-import { deleteSale } from '../../db/dbSlice';
+import { deleteSale, updateSale } from '../../db/dbSlice';
 import SaleCard from '../../../components/cards/SaleCard';
 import SaleForm from '../../../components/forms/SaleForm';
 import SearchBar from '../../../components/common/SearchBar';
@@ -20,7 +20,7 @@ export const SalesPage: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'exchanged' | 'prepared'>('exchanged');
   const [dateFilter, setDateFilter] = useState<'today' | 'week' | 'month' | 'all'>('all');
-  const [paymentFilter, setPaymentFilter] = useState<'all' | 'cash' | 'upi' | 'card' | 'credit'>('all');
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid' | 'cash' | 'upi' | 'card' | 'credit'>('all');
   const [search, setSearch] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
@@ -59,13 +59,30 @@ export const SalesPage: React.FC = () => {
         s.id.toLowerCase().includes(search.toLowerCase())
       );
 
-      // 4. Filter by payment method
-      const matchesPayment = paymentFilter === 'all' || s.paymentMethod === paymentFilter;
+      // 4. Filter by payment method/status
+      let matchesPayment = true;
+      if (paymentFilter === 'paid') {
+        matchesPayment = s.paymentStatus === 'paid';
+      } else if (paymentFilter === 'unpaid') {
+        matchesPayment = s.paymentStatus !== 'paid';
+      } else if (paymentFilter !== 'all') {
+        matchesPayment = s.paymentMethod === paymentFilter;
+      }
 
       return matchesSearch && matchesPayment;
   });
 
-
+  const handleSettle = (method: 'cash' | 'upi' | 'card') => {
+    if (!selectedSale) return;
+    const updated: Sale = {
+      ...selectedSale,
+      paymentStatus: 'paid',
+      paymentMethod: method,
+      updatedAt: new Date().toISOString()
+    };
+    dispatch(updateSale(updated));
+    setSelectedSale(updated);
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="animate-fade-in">
@@ -103,11 +120,13 @@ export const SalesPage: React.FC = () => {
       <div style={{ display: 'flex', gap: '8px', marginTop: '-4px' }}>
         <Select
           options={[
-            { value: 'all', label: '💳 All Payment Methods' },
-            { value: 'upi', label: '📱 UPI / QR Code' },
-            { value: 'cash', label: '💵 Cash' },
-            { value: 'card', label: '💳 Card' },
-            { value: 'credit', label: '📒 Credit / Unpaid' }
+            { value: 'all', label: '🧾 All Invoices' },
+            { value: 'paid', label: '✅ Paid Invoices Only' },
+            { value: 'unpaid', label: '❌ Unpaid Invoices Only' },
+            { value: 'upi', label: '📱 Paid via UPI / QR' },
+            { value: 'cash', label: '💵 Paid via Cash' },
+            { value: 'card', label: '💳 Paid via Card' },
+            { value: 'credit', label: '📒 Credit Payment Method' }
           ]}
           value={paymentFilter}
           onChange={(e) => setPaymentFilter(e.target.value as any)}
@@ -120,6 +139,28 @@ export const SalesPage: React.FC = () => {
         onChange={setSearch}
         placeholder="Search by customer name, phone, or invoice ID..."
       />
+
+      {filtered.length > 0 && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          backgroundColor: 'var(--primary-soft)',
+          padding: '10px 14px',
+          borderRadius: 'var(--radius-md)',
+          borderLeft: '4px solid var(--primary)',
+          fontSize: '0.85rem',
+          fontWeight: 600,
+          marginTop: '-4px'
+        }}>
+          <span style={{ color: 'var(--text-secondary)' }}>
+            Showing {filtered.length} {filtered.length === 1 ? 'sale' : 'sales'}
+          </span>
+          <span style={{ color: 'var(--primary)', fontSize: '0.92rem' }}>
+            Total Value: <strong>₹{filtered.reduce((sum, s) => sum + s.totalAmount, 0).toFixed(2)}</strong>
+          </span>
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-muted)' }}>
@@ -183,6 +224,67 @@ export const SalesPage: React.FC = () => {
             {selectedSale.notes && (
               <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic', backgroundColor: 'var(--bg-tertiary)', padding: '10px', borderRadius: 'var(--radius-sm)' }}>
                 Notes: {selectedSale.notes}
+              </div>
+            )}
+
+            {selectedSale.paymentStatus !== 'paid' && (
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--warning)', display: 'block' }}>
+                  📒 Invoice has Unpaid Debt / Credit
+                </span>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    type="button"
+                    onClick={() => handleSettle('cash')} 
+                    style={{ 
+                      flex: 1, 
+                      backgroundColor: 'var(--success-soft)', 
+                      color: 'var(--success)', 
+                      border: '1.5px solid var(--success)', 
+                      borderRadius: 'var(--radius-sm)', 
+                      padding: '8px 0', 
+                      fontWeight: 700, 
+                      fontSize: '0.8rem', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    💵 Settle Cash
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => handleSettle('upi')} 
+                    style={{ 
+                      flex: 1, 
+                      backgroundColor: 'var(--primary-soft)', 
+                      color: 'var(--primary)', 
+                      border: '1.5px solid var(--primary)', 
+                      borderRadius: 'var(--radius-sm)', 
+                      padding: '8px 0', 
+                      fontWeight: 700, 
+                      fontSize: '0.8rem', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    📱 Settle UPI
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => handleSettle('card')} 
+                    style={{ 
+                      flex: 1, 
+                      backgroundColor: 'var(--bg-tertiary)', 
+                      color: 'var(--text-secondary)', 
+                      border: '1.5px solid var(--border-color)', 
+                      borderRadius: 'var(--radius-sm)', 
+                      padding: '8px 0', 
+                      fontWeight: 700, 
+                      fontSize: '0.8rem', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    💳 Settle Card
+                  </button>
+                </div>
               </div>
             )}
           </div>

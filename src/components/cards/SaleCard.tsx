@@ -64,7 +64,7 @@ export const SaleCard: React.FC<SaleCardProps> = ({
             color: 'var(--success)',
             fontFamily: 'var(--font-title)'
           }}>
-            + ₹{sale.totalAmount}
+            + ₹{sale.totalAmount.toFixed(2)}
           </span>
           <Badge variant={sale.paymentStatus === 'paid' ? 'success' : 'warning'}>
             {sale.paymentStatus.toUpperCase()}

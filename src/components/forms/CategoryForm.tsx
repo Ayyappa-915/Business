@@ -22,6 +22,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
   const [description, setDescription] = useState(categoryToEdit?.description || '');
   const [selectedColor, setSelectedColor] = useState(categoryToEdit?.color || CATEGORY_COLORS[0]);
   const [type, setType] = useState<'prepared' | 'exchanged'>(categoryToEdit?.type || 'exchanged');
+  const [stockMode, setStockMode] = useState<'shared' | 'independent'>(categoryToEdit?.stockMode || 'independent');
   const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -37,6 +38,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
       description: description.trim() || undefined,
       color: selectedColor,
       type,
+      stockMode: type === 'exchanged' ? stockMode : undefined,
       createdAt: categoryToEdit?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -76,6 +78,19 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
             : 'Freshly prepared items with no stock tracking (e.g. Tiffin, Tea)'
         }
       />
+
+      {type === 'exchanged' && (
+        <Select
+          label="Default Stock Management Mode"
+          options={[
+            { value: 'independent', label: 'Variant-level Stock (e.g. Cool Drinks, Eggs)' },
+            { value: 'shared', label: 'Shared Bulk Stock (e.g. Chicken Center cuts)' }
+          ]}
+          value={stockMode}
+          onChange={(e) => setStockMode(e.target.value as 'shared' | 'independent')}
+          helperText="Chicken variants usually share a bulk cage/meat pool, while cool drinks/bottles maintain separate stock for each packaging variant."
+        />
+      )}
 
       <TextArea
         label="Description (Optional)"

@@ -328,8 +328,14 @@ export const VariantsPage: React.FC = () => {
                 {!isCollapsed && (
                   <div style={{ padding: '8px 16px 16px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {vars.map(v => {
-                      const isLowStock = activeTab === 'exchanged' && v.stock <= v.lowStockThreshold;
-                      const isOutOfStock = activeTab === 'exchanged' && v.stock <= 0;
+                      const isHens = v.name.toLowerCase().includes('hen') || 
+                                     v.name.toLowerCase().includes('live') ||
+                                     prodName.toLowerCase().includes('hen') ||
+                                     prodName.toLowerCase().includes('live');
+                      const isLowStock = activeTab === 'exchanged' && 
+                        (isHens && v.weightStock !== undefined ? v.weightStock <= v.lowStockThreshold : v.stock <= v.lowStockThreshold);
+                      const isOutOfStock = activeTab === 'exchanged' && 
+                        (isHens && v.weightStock !== undefined ? v.weightStock <= 0 : v.stock <= 0);
 
                       // Clean variant label by removing parent product name prefix if it starts with it
                       const variantLabel = v.name.toLowerCase().startsWith(prodName.toLowerCase())
@@ -448,14 +454,26 @@ export const VariantsPage: React.FC = () => {
                               )}
                             </div>
 
-                            {activeTab === 'exchanged' && (
-                              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                                Stock: <span style={{ 
-                                  color: isOutOfStock ? 'var(--danger)' : isLowStock ? 'var(--warning)' : 'var(--text-primary)',
-                                  fontWeight: 700
-                                }}>{v.stock}</span> <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{v.variantUnit || unitAbbr}</span>
-                              </div>
-                            )}
+                            {activeTab === 'exchanged' && (() => {
+                              const isHens = v.name.toLowerCase().includes('hen') || 
+                                             v.name.toLowerCase().includes('live') ||
+                                             (prod && prod.name.toLowerCase().includes('hen')) ||
+                                             (prod && prod.name.toLowerCase().includes('live')) ||
+                                             v.variantUnit?.toLowerCase() === 'pcs' ||
+                                             unitAbbr?.toLowerCase() === 'pcs';
+                              const displayUnit = isHens ? 'pcs' : (v.variantUnit || unitAbbr || 'pcs');
+                              const weightStockStr = (isHens && v.weightStock !== undefined && v.weightStock > 0)
+                                ? ` (${v.weightStock.toFixed(2)} kg)`
+                                : '';
+                              return (
+                                <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                  Stock: <span style={{ 
+                                    color: isOutOfStock ? 'var(--danger)' : isLowStock ? 'var(--warning)' : 'var(--text-primary)',
+                                    fontWeight: 700
+                                  }}>{v.stock}</span> <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{displayUnit}{weightStockStr}</span>
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
                       );

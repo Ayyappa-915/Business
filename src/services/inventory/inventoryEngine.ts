@@ -38,6 +38,39 @@ export const inventoryEngine = {
         // Independent stock
         const saleItem = items.find(item => item.variantId === variant.id);
         if (saleItem) {
+          const isHens = variant.name.toLowerCase().includes('hen') || 
+                         variant.name.toLowerCase().includes('live') ||
+                         prod?.name.toLowerCase().includes('hen') ||
+                         prod?.name.toLowerCase().includes('live') ||
+                         variant.variantUnit?.toLowerCase() === 'pcs' ||
+                         prod?.unitId?.toLowerCase() === 'pcs';
+
+          if (isHens) {
+            const avgWeight = (variant.stock > 0 && variant.weightStock) 
+              ? variant.weightStock / variant.stock 
+              : 3.33;
+
+            const soldByWeight = prod?.unitId === 'kg' || !Number.isInteger(saleItem.quantity) || saleItem.quantity > 50; 
+            
+            let piecesReduced = 0;
+            let weightReduced = 0;
+
+            if (soldByWeight) {
+              weightReduced = saleItem.quantity;
+              piecesReduced = Math.round(saleItem.quantity / avgWeight) || 1;
+            } else {
+              piecesReduced = saleItem.quantity;
+              weightReduced = saleItem.quantity * avgWeight;
+            }
+
+            return {
+              ...variant,
+              stock: Math.max(0, variant.stock - piecesReduced),
+              weightStock: Math.max(0, (variant.weightStock || 0) - weightReduced),
+              updatedAt: new Date().toISOString()
+            };
+          }
+
           return {
             ...variant,
             stock: Math.max(0, variant.stock - saleItem.quantity),
@@ -113,9 +146,16 @@ export const inventoryEngine = {
               updatedAt: new Date().toISOString()
             };
           }
+          const isHens = variant.name.toLowerCase().includes('hen') || 
+                         variant.name.toLowerCase().includes('live') ||
+                         prod?.name.toLowerCase().includes('hen') ||
+                         prod?.name.toLowerCase().includes('live') ||
+                         variant.variantUnit?.toLowerCase() === 'pcs' ||
+                         prod?.unitId?.toLowerCase() === 'pcs';
           return {
             ...variant,
-            stock: variant.stock + purchaseItem.quantity,
+            stock: variant.stock + (isHens ? (purchaseItem.pieces !== undefined ? purchaseItem.pieces : Math.round(purchaseItem.quantity / 3.33)) : purchaseItem.quantity),
+            weightStock: (variant.weightStock || 0) + (isHens ? (purchaseItem.weight !== undefined ? purchaseItem.weight : purchaseItem.quantity) : 0),
             cost: purchaseItem.costPrice,
             updatedAt: new Date().toISOString()
           };
@@ -160,16 +200,35 @@ export const inventoryEngine = {
       return variants.map(variant => {
         if (variant.id === log.variantId) {
           let newStock = variant.stock;
+          let newWeightStock = variant.weightStock || 0;
+
+          const isHens = variant.name.toLowerCase().includes('hen') || 
+                         variant.name.toLowerCase().includes('live') ||
+                         prod?.name.toLowerCase().includes('hen') ||
+                         prod?.name.toLowerCase().includes('live') ||
+                         variant.variantUnit?.toLowerCase() === 'pcs' ||
+                         prod?.unitId?.toLowerCase() === 'pcs';
+
+          const avgWeight = (variant.stock > 0 && variant.weightStock) 
+            ? variant.weightStock / variant.stock 
+            : 3.33;
+
+          const estWeight = log.weight !== undefined ? log.weight : (isHens ? log.quantity * avgWeight : 0);
+
           if (log.type === 'add') {
             newStock += log.quantity;
+            newWeightStock += estWeight;
           } else if (log.type === 'subtract') {
             newStock = Math.max(0, variant.stock - log.quantity);
+            newWeightStock = Math.max(0, newWeightStock - estWeight);
           } else if (log.type === 'set') {
             newStock = log.quantity;
+            newWeightStock = log.weight !== undefined ? log.weight : (isHens ? log.quantity * avgWeight : 0);
           }
           return {
             ...variant,
             stock: newStock,
+            weightStock: newWeightStock,
             updatedAt: new Date().toISOString()
           };
         }

@@ -5,6 +5,8 @@ export interface PurchaseItem {
   variantId: string; // References ProductVariant
   quantity: number;
   costPrice: number;
+  pieces?: number;   // count of hens/items
+  weight?: number;   // total weight in kg if applicable
 }
 
 // Free-form item for recording any exchanged/stock purchase without variant lookup
@@ -14,6 +16,8 @@ export interface FreePurchaseItem {
   unit: string;       // e.g. kg, pcs, box
   costPerUnit: number;
   totalCost: number;
+  pieces?: number;   // count of hens/items
+  weight?: number;   // total weight in kg if applicable
 }
 
 export interface Purchase extends BaseEntity {
@@ -28,4 +32,6 @@ export interface Purchase extends BaseEntity {
   paymentStatus: 'paid' | 'partial' | 'unpaid';
   paymentMethod: 'cash' | 'upi' | 'card' | 'credit';
   notes?: string;
+  additionalCost?: number; // Petrol / Transport expenses
+  additionalCostReason?: string; // e.g. "Petrol"
 }

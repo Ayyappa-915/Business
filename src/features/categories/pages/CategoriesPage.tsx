@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Edit2, Trash2 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import { deleteCategory } from '../../db/dbSlice';
+import { useAuth } from '../../../hooks/useAuth';
 import CategoryForm from '../../../components/forms/CategoryForm';
 import SearchBar from '../../../components/common/SearchBar';
 import BottomSheet from '../../../components/common/BottomSheet';
@@ -10,10 +11,15 @@ import Button from '../../../components/common/Button';
 import Badge from '../../../components/common/Badge';
 import { Category } from '../../../types/category.types';
 
+import { useNotification } from '../../../context/NotificationContext';
+
 export const CategoriesPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const categories = useAppSelector(state => state.db.categories);
   const products = useAppSelector(state => state.db.products);
+  const variants = useAppSelector(state => state.db.variants);
+  const { user } = useAuth();
+  const notification = useNotification();
   
   const [search, setSearch] = useState('');
   
@@ -29,6 +35,26 @@ export const CategoriesPage: React.FC = () => {
 
   const getProductCount = (catId: string) => {
     return products.filter(p => p.categoryId === catId).length;
+  };
+
+  const getCategoryStock = (catId: string) => {
+    const catProducts = products.filter(p => p.categoryId === catId);
+    const catProductIds = catProducts.map(p => p.id);
+    const catVariants = variants.filter(v => catProductIds.includes(v.productId));
+    return catVariants.reduce((sum, v) => sum + v.stock, 0);
+  };
+
+  const handleAttemptDelete = (catId: string) => {
+    if (user?.role !== 'owner') {
+      notification.alert('🔒 Access Denied: Only the owner is authorized to delete categories.');
+      return;
+    }
+    const catStock = getCategoryStock(catId);
+    if (catStock > 0) {
+      notification.alert('❌ Cannot Delete Category: Some products in this category still have active inventory stock. All products in this category must have 0 stock first.');
+      return;
+    }
+    setDeletingCatId(catId);
   };
 
   const handleDelete = () => {
@@ -80,7 +106,7 @@ export const CategoriesPage: React.FC = () => {
                   <button onClick={() => setEditingCat(cat)} className="interactive" style={{ padding: '4px', color: 'var(--text-secondary)' }}>
                     <Edit2 size={14} />
                   </button>
-                  <button onClick={() => setDeletingCatId(cat.id)} className="interactive" style={{ padding: '4px', color: 'var(--danger)' }}>
+                  <button onClick={() => handleAttemptDelete(cat.id)} className="interactive" style={{ padding: '4px', color: 'var(--danger)' }}>
                     <Trash2 size={14} />
                   </button>
                 </div>
