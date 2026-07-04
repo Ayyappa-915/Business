@@ -27,7 +27,7 @@ export const useAuth = () => {
         name: data.username,
         email: email.includes('@') ? email : `${data.username}@biztracker.com`,
         role: data.role as UserRole,
-        shopName: 'Ayyappa Super Mart',
+        shopName: 'Ramanjaneyulu Super Mart',
         createdAt: new Date().toISOString()
       };
 

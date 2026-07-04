@@ -157,7 +157,7 @@ export const MobileLayout: React.FC = () => {
           {/* Shop branding / logo */}
           <div className="sidebar-header">
             <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
-              {user?.shopName || 'Ayyappa Super Mart'}
+              {user?.shopName || 'Ramanjaneyulu Super Mart'}
             </h2>
             <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>
               {user?.name} ({user?.role?.toUpperCase()})

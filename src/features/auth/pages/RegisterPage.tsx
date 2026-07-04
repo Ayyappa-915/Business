@@ -61,7 +61,7 @@ export const RegisterPage: React.FC = () => {
         <Input
           label="Your Full Name"
           type="text"
-          placeholder="e.g. Bala Ayyappa"
+          placeholder="e.g. Ramanjaneyulu"
           value={name}
           onChange={(e) => {
             setName(e.target.value);
@@ -87,7 +87,7 @@ export const RegisterPage: React.FC = () => {
         <Input
           label="Store Shop Name"
           type="text"
-          placeholder="Ayyappa Super Mart"
+          placeholder="Ramanjaneyulu Super Mart"
           value={shopName}
           onChange={(e) => {
             setShopName(e.target.value);

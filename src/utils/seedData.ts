@@ -12,11 +12,11 @@ import { User } from '../types/auth.types';
 export const SEED_USERS: User[] = [
   {
     id: 'user_owner',
-    name: 'G Bala Ayyappa',
+    name: 'Ramanjaneyulu',
     email: 'owner@biztracker.com',
     role: 'owner',
     phone: '+91 98765 43210',
-    shopName: 'Ayyappa Super Mart',
+    shopName: 'Ramanjaneyulu Super Mart',
     businessType: 'Retail Grocery',
     createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -26,7 +26,7 @@ export const SEED_USERS: User[] = [
     email: 'cashier@biztracker.com',
     role: 'cashier',
     phone: '+91 99988 87766',
-    shopName: 'Ayyappa Super Mart',
+    shopName: 'Ramanjaneyulu Super Mart',
     businessType: 'Retail Grocery',
     createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
   }
