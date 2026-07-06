@@ -29,8 +29,16 @@ export const InventoryCard: React.FC<InventoryCardProps> = ({
                  variant.variantUnit?.toLowerCase() === 'pcs' ||
                  unit?.abbreviation?.toLowerCase() === 'pcs';
                  
-  const isLowStock = isStockTracked && 
-    (isHens && variant.weightStock !== undefined ? variant.weightStock <= variant.lowStockThreshold : variant.stock <= variant.lowStockThreshold);
+  const baseStock = variant.stock * (variant.conversionFactor || 1);
+  const isLowStock = isStockTracked && (() => {
+    if (isHens && variant.weightStock !== undefined) {
+      return variant.weightStock <= variant.lowStockThreshold;
+    }
+    if (product.hasSharedStock && variant.purpose === 'buy') {
+      return baseStock <= variant.lowStockThreshold;
+    }
+    return variant.stock <= variant.lowStockThreshold;
+  })();
   const isOutOfStock = isStockTracked && 
     (isHens && variant.weightStock !== undefined ? variant.weightStock <= 0 : variant.stock <= 0);
                  

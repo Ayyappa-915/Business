@@ -76,7 +76,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                    product.name.toLowerCase().includes('hen') ||
                    product.name.toLowerCase().includes('live') ||
                    v.variantUnit?.toLowerCase() === 'pcs';
-    return isHens && v.weightStock !== undefined ? v.weightStock <= v.lowStockThreshold : v.stock <= v.lowStockThreshold;
+    if (isHens && v.weightStock !== undefined) {
+      return v.weightStock <= v.lowStockThreshold;
+    }
+    if (product.hasSharedStock && v.purpose === 'buy') {
+      const baseStock = v.stock * (v.conversionFactor || 1);
+      return baseStock <= v.lowStockThreshold;
+    }
+    return v.stock <= v.lowStockThreshold;
   });
   const isAllOut = totalStock === 0;
 
@@ -139,7 +146,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                       ? ` (${v.weightStock.toFixed(2)} kg)` 
                       : '';
                     if (product.hasSharedStock) {
-                      return `Stock: ${baseStock.toFixed(2)} ${unit?.abbreviation || 'pcs'} (Shared) • `;
+                      return `Stock: ${v.stock.toFixed(2)} ${displayUnit} (Shared) • `;
                     }
                     return `Stock: ${v.stock.toFixed(2)} ${displayUnit}${weightStockStr} • `;
                   })() : ''}
