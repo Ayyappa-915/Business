@@ -332,8 +332,17 @@ export const VariantsPage: React.FC = () => {
                                      v.name.toLowerCase().includes('live') ||
                                      prodName.toLowerCase().includes('hen') ||
                                      prodName.toLowerCase().includes('live');
-                      const isLowStock = activeTab === 'exchanged' && 
-                        (isHens && v.weightStock !== undefined ? v.weightStock <= v.lowStockThreshold : v.stock <= v.lowStockThreshold);
+                      const prod = products.find(p => p.id === v.productId);
+                      const isLowStock = activeTab === 'exchanged' && (() => {
+                        if (isHens && v.weightStock !== undefined) {
+                          return v.weightStock <= v.lowStockThreshold;
+                        }
+                        if (prod && prod.hasSharedStock && v.purpose === 'buy') {
+                          const baseStock = v.stock * (v.conversionFactor || 1);
+                          return baseStock <= v.lowStockThreshold;
+                        }
+                        return v.stock <= v.lowStockThreshold;
+                      })();
                       const isOutOfStock = activeTab === 'exchanged' && 
                         (isHens && v.weightStock !== undefined ? v.weightStock <= 0 : v.stock <= 0);
 

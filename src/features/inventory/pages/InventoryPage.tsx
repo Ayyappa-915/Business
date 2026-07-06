@@ -121,7 +121,16 @@ export const InventoryPage: React.FC = () => {
                    v.name.toLowerCase().includes('live') ||
                    p.name.toLowerCase().includes('hen') ||
                    p.name.toLowerCase().includes('live');
-    const isLow = isHens && v.weightStock !== undefined ? v.weightStock <= v.lowStockThreshold : v.stock <= v.lowStockThreshold;
+    const isLow = (() => {
+      if (isHens && v.weightStock !== undefined) {
+        return v.weightStock <= v.lowStockThreshold;
+      }
+      if (p.hasSharedStock && v.purpose === 'buy') {
+        const baseStock = v.stock * (v.conversionFactor || 1);
+        return baseStock <= v.lowStockThreshold;
+      }
+      return v.stock <= v.lowStockThreshold;
+    })();
     const matchesFilter = activeTab === 'prepared' || !filterLowStock || isLow;
 
     return matchesSearch && matchesFilter && matchesCat;

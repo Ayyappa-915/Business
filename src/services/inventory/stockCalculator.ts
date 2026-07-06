@@ -110,9 +110,16 @@ export const stockCalculator = {
                        product.name.toLowerCase().includes('hen') ||
                        product.name.toLowerCase().includes('live') ||
                        variant.variantUnit?.toLowerCase() === 'pcs';
-        const isLow = isHens && variant.weightStock !== undefined 
-          ? variant.weightStock <= variant.lowStockThreshold 
-          : variant.stock <= variant.lowStockThreshold;
+        const isLow = (() => {
+          if (isHens && variant.weightStock !== undefined) {
+            return variant.weightStock <= variant.lowStockThreshold;
+          }
+          if (product.hasSharedStock && variant.purpose === 'buy') {
+            const baseStock = variant.stock * (variant.conversionFactor || 1);
+            return baseStock <= variant.lowStockThreshold;
+          }
+          return variant.stock <= variant.lowStockThreshold;
+        })();
         if (isLow) {
           alerts.push({
             productId: variant.productId,

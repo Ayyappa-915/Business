@@ -69,7 +69,17 @@ export const analyticsEngine = {
                      prod.name.toLowerCase().includes('hen') ||
                      prod.name.toLowerCase().includes('live') ||
                      v.variantUnit?.toLowerCase() === 'pcs';
-      return isHens && v.weightStock !== undefined ? v.weightStock <= v.lowStockThreshold : v.stock <= v.lowStockThreshold;
+      const isLow = (() => {
+        if (isHens && v.weightStock !== undefined) {
+          return v.weightStock <= v.lowStockThreshold;
+        }
+        if (prod.hasSharedStock && v.purpose === 'buy') {
+          const baseStock = v.stock * (v.conversionFactor || 1);
+          return baseStock <= v.lowStockThreshold;
+        }
+        return v.stock <= v.lowStockThreshold;
+      })();
+      return isLow;
     }).length;
 
     return {
@@ -262,7 +272,16 @@ export const analyticsEngine = {
                        prod.name.toLowerCase().includes('hen') ||
                        prod.name.toLowerCase().includes('live') ||
                        v.variantUnit?.toLowerCase() === 'pcs';
-        const isLow = isHens && v.weightStock !== undefined ? v.weightStock <= v.lowStockThreshold : v.stock <= v.lowStockThreshold;
+        const isLow = (() => {
+          if (isHens && v.weightStock !== undefined) {
+            return v.weightStock <= v.lowStockThreshold;
+          }
+          if (prod.hasSharedStock && v.purpose === 'buy') {
+            const baseStock = v.stock * (v.conversionFactor || 1);
+            return baseStock <= v.lowStockThreshold;
+          }
+          return v.stock <= v.lowStockThreshold;
+        })();
         return cat?.type === 'exchanged' && isLow;
       }).length;
     } else {
