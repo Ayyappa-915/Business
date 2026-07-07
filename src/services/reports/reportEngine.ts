@@ -13,8 +13,8 @@ import {
 } from '../../types/report.types';
 
 export const reportEngine = {
-  adjustPreparedDate(dateStr: string): string {
-    return new Date(dateStr).toISOString();
+  getPreparedReportingDate(pur: Purchase): string {
+    return new Date(pur.targetSalesDate || pur.purchaseDate).toISOString();
   },
 
   isWithinRange(dateStr: string, range?: DateRange): boolean {
@@ -121,7 +121,7 @@ export const reportEngine = {
     // Add prepared purchases inside the date range as part of COGS (material costs)
     purchases.forEach(pur => {
       if (pur.type === 'prepared') {
-        const adjustedDate = reportEngine.adjustPreparedDate(pur.purchaseDate);
+        const adjustedDate = reportEngine.getPreparedReportingDate(pur);
         if (this.isWithinRange(adjustedDate, range)) {
           costOfGoodsSold += pur.totalAmount;
         }
@@ -137,7 +137,7 @@ export const reportEngine = {
 
     let totalPurchases = 0;
     purchases.forEach(pur => {
-      const dateToCheck = pur.type === 'prepared' ? reportEngine.adjustPreparedDate(pur.purchaseDate) : pur.purchaseDate;
+      const dateToCheck = pur.type === 'prepared' ? reportEngine.getPreparedReportingDate(pur) : pur.purchaseDate;
       if (this.isWithinRange(dateToCheck, range)) {
         totalPurchases += pur.totalAmount;
       }
@@ -201,7 +201,7 @@ export const reportEngine = {
     if (mode === 'prepared') {
       purchases.forEach(pur => {
         if (pur.type === 'prepared') {
-          const adjustedDate = reportEngine.adjustPreparedDate(pur.purchaseDate);
+          const adjustedDate = reportEngine.getPreparedReportingDate(pur);
           if (this.isWithinRange(adjustedDate, range)) {
             const cat = catMap.get(pur.categoryId || '');
             if (cat && cat.type === 'prepared') {
@@ -221,7 +221,7 @@ export const reportEngine = {
 
     let totalPurchases = 0;
     purchases.forEach(pur => {
-      const dateToCheck = pur.type === 'prepared' ? reportEngine.adjustPreparedDate(pur.purchaseDate) : pur.purchaseDate;
+      const dateToCheck = pur.type === 'prepared' ? reportEngine.getPreparedReportingDate(pur) : pur.purchaseDate;
       if (this.isWithinRange(dateToCheck, range)) {
         if (mode === 'prepared' && pur.type === 'prepared') {
           const cat = catMap.get(pur.categoryId || '');

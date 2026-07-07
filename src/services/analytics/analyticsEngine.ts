@@ -8,8 +8,8 @@ import { ChartDataPoint, CategoryContribution, ProductPerformance } from '../../
 import { Purchase } from '../../types/purchase.types';
 
 export const analyticsEngine = {
-  adjustPreparedDate(dateStr: string): string {
-    return new Date(dateStr).toDateString();
+  getPreparedReportingDate(pur: Purchase): string {
+    return new Date(pur.targetSalesDate || pur.purchaseDate).toDateString();
   },
 
   getDashboardStats(sales: Sale[], expenses: Expense[], variants: ProductVariant[], products: Product[]): DashboardStats {
@@ -234,7 +234,7 @@ export const analyticsEngine = {
         const cat = catMap.get(pur.categoryId || '');
         if (!cat || cat.type !== 'prepared') return;
 
-        const purDate = analyticsEngine.adjustPreparedDate(pur.purchaseDate);
+        const purDate = analyticsEngine.getPreparedReportingDate(pur);
         if (purDate === today) {
           todayCost += pur.totalAmount;
         } else if (purDate === yesterdayStr) {
@@ -246,7 +246,7 @@ export const analyticsEngine = {
     let todayPurchases = 0;
     let yesterdayPurchases = 0;
     purchases.forEach(pur => {
-      const purDate = pur.type === 'prepared' ? analyticsEngine.adjustPreparedDate(pur.purchaseDate) : new Date(pur.purchaseDate).toDateString();
+      const purDate = pur.type === 'prepared' ? analyticsEngine.getPreparedReportingDate(pur) : new Date(pur.purchaseDate).toDateString();
       if (mode === 'prepared' && pur.type === 'prepared') {
         const cat = catMap.get(pur.categoryId || '');
         if (cat && cat.type === 'prepared') {
@@ -352,7 +352,7 @@ export const analyticsEngine = {
         const cat = catMap.get(pur.categoryId);
         if (!cat || cat.type !== 'prepared') return;
 
-        const purDate = analyticsEngine.adjustPreparedDate(pur.purchaseDate);
+        const purDate = analyticsEngine.getPreparedReportingDate(pur);
         if (purDate !== today) return;
 
         breakdown[pur.categoryId].cost += pur.totalAmount;

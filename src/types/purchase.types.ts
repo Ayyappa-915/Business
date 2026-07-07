@@ -27,6 +27,7 @@ export interface Purchase extends BaseEntity {
   exchangedItems?: FreePurchaseItem[];                 // Free-form items for exchanged
   supplierName?: string;
   purchaseDate: string;
+  targetSalesDate?: string; // Sales date this purchase counts towards (prepared only)
   items: PurchaseItem[];    // Legacy variant-linked items (kept for backward compatibility)
   totalAmount: number;
   paymentStatus: 'paid' | 'partial' | 'unpaid';

@@ -85,6 +85,11 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
     const minutes = String(now.getMinutes()).padStart(2, '0');
     return `${hours}:${minutes}`;
   });
+  const [targetSalesDate, setTargetSalesDate] = useState(() => {
+    const now = new Date();
+    const tzoffset = now.getTimezoneOffset() * 60000;
+    return (new Date(now.getTime() - tzoffset)).toISOString().slice(0, 10);
+  });
 
   const getCombinedDateTimeISO = () => {
     try {
@@ -360,6 +365,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
         preparedItems,
         supplierName: supplierName.trim() || undefined,
         purchaseDate: getCombinedDateTimeISO(),
+        targetSalesDate: new Date(targetSalesDate).toISOString(),
         items: [],
         totalAmount: preparedTotal,
         paymentStatus,
@@ -680,6 +686,13 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
             onChange={(e) => setSelectedCategoryId(e.target.value)}
             placeholder="Select category..."
             helperText="This cost will be linked to the selected food category"
+          />
+          <Input 
+            label="Match Cost with Sales On (Date)" 
+            type="date" 
+            value={targetSalesDate} 
+            onChange={(e) => setTargetSalesDate(e.target.value)} 
+            helperText="Choose which day's profit dashboard should absorb this raw material cost"
           />
           <div style={{ padding: '12px', border: '1.5px dashed var(--border-color)', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-secondary)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
