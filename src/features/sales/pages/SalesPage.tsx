@@ -18,12 +18,21 @@ export const SalesPage: React.FC = () => {
   const variants = useAppSelector(state => state.db.variants);
   const categories = useAppSelector(state => state.db.categories);
 
+  const user = useAppSelector(state => state.auth.user);
   const [activeTab, setActiveTab] = useState<'exchanged' | 'prepared'>('exchanged');
   const [dateFilter, setDateFilter] = useState<'today' | 'week' | 'month' | 'all'>('all');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid' | 'cash' | 'upi' | 'card' | 'credit'>('all');
   const [search, setSearch] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
+  const handleDeleteSale = async () => {
+    if (!selectedSale) return;
+    await dispatch(deleteSale(selectedSale.id));
+    setSelectedSale(null);
+    setIsDeleteConfirmOpen(false);
+  };
 
   const filtered = sales.filter(s => {
     // 1. Filter by category type
@@ -287,9 +296,31 @@ export const SalesPage: React.FC = () => {
                 </div>
               </div>
             )}
+            {user?.role === 'owner' && (
+              <div style={{ marginTop: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
+                <Button 
+                  type="button" 
+                  variant="danger" 
+                  fullWidth 
+                  onClick={() => setIsDeleteConfirmOpen(true)}
+                >
+                  🗑️ Delete Invoice (Admin Only)
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </BottomSheet>
+
+      <ConfirmDialog
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteSale}
+        title="Delete Invoice"
+        message="Are you sure you want to delete this invoice? This will refund stocks and cannot be undone."
+        confirmText="Delete"
+        type="danger"
+      />
 
 
     </div>

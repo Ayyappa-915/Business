@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAppSelector } from '../../../app/hooks';
+import { useAppSelector, useAppDispatch } from '../../../app/hooks';
 import PurchaseCard from '../../../components/cards/PurchaseCard';
 import PurchaseForm from '../../../components/forms/PurchaseForm';
 import SearchBar from '../../../components/common/SearchBar';
@@ -7,19 +7,31 @@ import BottomSheet from '../../../components/common/BottomSheet';
 import Button from '../../../components/common/Button';
 import SegmentedControl from '../../../components/common/SegmentedControl';
 import Select from '../../../components/common/Select';
+import ConfirmDialog from '../../../components/common/ConfirmDialog';
 import { Purchase } from '../../../types/purchase.types';
+import { deletePurchase } from '../../db/dbSlice';
 
 export const PurchasesPage: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(state => state.auth.user);
   const purchases = useAppSelector(state => state.db.purchases);
   const products = useAppSelector(state => state.db.products);
   const variants = useAppSelector(state => state.db.variants);
-
+  
   const [activeTab, setActiveTab] = useState<'exchanged' | 'prepared'>('exchanged');
   const [dateFilter, setDateFilter] = useState<'today' | 'week' | 'month' | 'all'>('all');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'cash' | 'upi' | 'card' | 'credit'>('all');
   const [search, setSearch] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
+  const handleDeletePurchase = async () => {
+    if (!selectedPurchase) return;
+    await dispatch(deletePurchase(selectedPurchase.id));
+    setSelectedPurchase(null);
+    setIsDeleteConfirmOpen(false);
+  };
 
   const categories = useAppSelector(state => state.db.categories);
 
@@ -246,9 +258,31 @@ export const PurchasesPage: React.FC = () => {
                 Notes: {selectedPurchase.notes}
               </div>
             )}
+            {user?.role === 'owner' && (
+              <div style={{ marginTop: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
+                <Button 
+                  type="button" 
+                  variant="danger" 
+                  fullWidth 
+                  onClick={() => setIsDeleteConfirmOpen(true)}
+                >
+                  🗑️ Delete Purchase (Admin Only)
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </BottomSheet>
+
+      <ConfirmDialog
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleDeletePurchase}
+        title="Delete Purchase"
+        message="Are you sure you want to delete this purchase? This will revert stocks and cannot be undone."
+        confirmText="Delete"
+        type="danger"
+      />
     </div>
   );
 };
