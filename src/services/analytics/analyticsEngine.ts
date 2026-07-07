@@ -9,13 +9,7 @@ import { Purchase } from '../../types/purchase.types';
 
 export const analyticsEngine = {
   adjustPreparedDate(dateStr: string): string {
-    const d = new Date(dateStr);
-    if (!isNaN(d.getTime()) && d.getHours() >= 16) {
-      const shifted = new Date(d);
-      shifted.setDate(d.getDate() + 1);
-      return shifted.toDateString();
-    }
-    return d.toDateString();
+    return new Date(dateStr).toDateString();
   },
 
   getDashboardStats(sales: Sale[], expenses: Expense[], variants: ProductVariant[], products: Product[]): DashboardStats {

@@ -14,13 +14,7 @@ import {
 
 export const reportEngine = {
   adjustPreparedDate(dateStr: string): string {
-    const d = new Date(dateStr);
-    if (!isNaN(d.getTime()) && d.getHours() >= 16) {
-      const shifted = new Date(d);
-      shifted.setDate(d.getDate() + 1);
-      return shifted.toISOString();
-    }
-    return d.toISOString();
+    return new Date(dateStr).toISOString();
   },
 
   isWithinRange(dateStr: string, range?: DateRange): boolean {
