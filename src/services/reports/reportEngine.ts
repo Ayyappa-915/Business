@@ -13,6 +13,16 @@ import {
 } from '../../types/report.types';
 
 export const reportEngine = {
+  adjustPreparedDate(dateStr: string): string {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime()) && d.getHours() >= 16) {
+      const shifted = new Date(d);
+      shifted.setDate(d.getDate() + 1);
+      return shifted.toISOString();
+    }
+    return d.toISOString();
+  },
+
   isWithinRange(dateStr: string, range?: DateRange): boolean {
     if (!range) return true;
     const date = new Date(dateStr);
@@ -116,8 +126,11 @@ export const reportEngine = {
 
     // Add prepared purchases inside the date range as part of COGS (material costs)
     purchases.forEach(pur => {
-      if (pur.type === 'prepared' && this.isWithinRange(pur.purchaseDate, range)) {
-        costOfGoodsSold += pur.totalAmount;
+      if (pur.type === 'prepared') {
+        const adjustedDate = reportEngine.adjustPreparedDate(pur.purchaseDate);
+        if (this.isWithinRange(adjustedDate, range)) {
+          costOfGoodsSold += pur.totalAmount;
+        }
       }
     });
 
@@ -130,7 +143,8 @@ export const reportEngine = {
 
     let totalPurchases = 0;
     purchases.forEach(pur => {
-      if (this.isWithinRange(pur.purchaseDate, range)) {
+      const dateToCheck = pur.type === 'prepared' ? reportEngine.adjustPreparedDate(pur.purchaseDate) : pur.purchaseDate;
+      if (this.isWithinRange(dateToCheck, range)) {
         totalPurchases += pur.totalAmount;
       }
     });
@@ -192,10 +206,13 @@ export const reportEngine = {
 
     if (mode === 'prepared') {
       purchases.forEach(pur => {
-        if (pur.type === 'prepared' && this.isWithinRange(pur.purchaseDate, range)) {
-          const cat = catMap.get(pur.categoryId || '');
-          if (cat && cat.type === 'prepared') {
-            costOfGoodsSold += pur.totalAmount;
+        if (pur.type === 'prepared') {
+          const adjustedDate = reportEngine.adjustPreparedDate(pur.purchaseDate);
+          if (this.isWithinRange(adjustedDate, range)) {
+            const cat = catMap.get(pur.categoryId || '');
+            if (cat && cat.type === 'prepared') {
+              costOfGoodsSold += pur.totalAmount;
+            }
           }
         }
       });
@@ -210,7 +227,8 @@ export const reportEngine = {
 
     let totalPurchases = 0;
     purchases.forEach(pur => {
-      if (this.isWithinRange(pur.purchaseDate, range)) {
+      const dateToCheck = pur.type === 'prepared' ? reportEngine.adjustPreparedDate(pur.purchaseDate) : pur.purchaseDate;
+      if (this.isWithinRange(dateToCheck, range)) {
         if (mode === 'prepared' && pur.type === 'prepared') {
           const cat = catMap.get(pur.categoryId || '');
           if (cat && cat.type === 'prepared') {

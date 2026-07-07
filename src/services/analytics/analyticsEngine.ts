@@ -8,6 +8,16 @@ import { ChartDataPoint, CategoryContribution, ProductPerformance } from '../../
 import { Purchase } from '../../types/purchase.types';
 
 export const analyticsEngine = {
+  adjustPreparedDate(dateStr: string): string {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime()) && d.getHours() >= 16) {
+      const shifted = new Date(d);
+      shifted.setDate(d.getDate() + 1);
+      return shifted.toDateString();
+    }
+    return d.toDateString();
+  },
+
   getDashboardStats(sales: Sale[], expenses: Expense[], variants: ProductVariant[], products: Product[]): DashboardStats {
     const today = new Date().toDateString();
     const yesterday = new Date();
@@ -230,7 +240,7 @@ export const analyticsEngine = {
         const cat = catMap.get(pur.categoryId || '');
         if (!cat || cat.type !== 'prepared') return;
 
-        const purDate = new Date(pur.purchaseDate).toDateString();
+        const purDate = analyticsEngine.adjustPreparedDate(pur.purchaseDate);
         if (purDate === today) {
           todayCost += pur.totalAmount;
         } else if (purDate === yesterdayStr) {
@@ -242,7 +252,7 @@ export const analyticsEngine = {
     let todayPurchases = 0;
     let yesterdayPurchases = 0;
     purchases.forEach(pur => {
-      const purDate = new Date(pur.purchaseDate).toDateString();
+      const purDate = pur.type === 'prepared' ? analyticsEngine.adjustPreparedDate(pur.purchaseDate) : new Date(pur.purchaseDate).toDateString();
       if (mode === 'prepared' && pur.type === 'prepared') {
         const cat = catMap.get(pur.categoryId || '');
         if (cat && cat.type === 'prepared') {
@@ -348,7 +358,7 @@ export const analyticsEngine = {
         const cat = catMap.get(pur.categoryId);
         if (!cat || cat.type !== 'prepared') return;
 
-        const purDate = new Date(pur.purchaseDate).toDateString();
+        const purDate = analyticsEngine.adjustPreparedDate(pur.purchaseDate);
         if (purDate !== today) return;
 
         breakdown[pur.categoryId].cost += pur.totalAmount;

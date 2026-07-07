@@ -74,6 +74,28 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
 
+  const [purchaseDate, setPurchaseDate] = useState(() => {
+    const now = new Date();
+    const tzoffset = now.getTimezoneOffset() * 60000;
+    return (new Date(now.getTime() - tzoffset)).toISOString().slice(0, 10);
+  });
+  const [purchaseTime, setPurchaseTime] = useState(() => {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  });
+
+  const getCombinedDateTimeISO = () => {
+    try {
+      const combined = new Date(`${purchaseDate}T${purchaseTime}`);
+      if (!isNaN(combined.getTime())) {
+        return combined.toISOString();
+      }
+    } catch (e) {}
+    return new Date().toISOString();
+  };
+
   // ── Derived options ─────────────────────────────────────────────────────
   // Only exchanged, stock-tracked products
   const catalogProducts = products;
@@ -314,7 +336,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
         items: catalogItems,             // catalog-linked → triggers stock auto-update
         exchangedItems: freeItems,       // free-form → just expense tracking
         supplierName: supplierName.trim() || undefined,
-        purchaseDate: new Date().toISOString(),
+        purchaseDate: getCombinedDateTimeISO(),
         totalAmount: catalogTotal + freeTotal,
         paymentStatus,
         paymentMethod,
@@ -337,7 +359,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
         categoryId: selectedCategoryId,
         preparedItems,
         supplierName: supplierName.trim() || undefined,
-        purchaseDate: new Date().toISOString(),
+        purchaseDate: getCombinedDateTimeISO(),
         items: [],
         totalAmount: preparedTotal,
         paymentStatus,
@@ -696,6 +718,22 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
 
       {/* ── Shared payment fields ── */}
       <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '10px', marginTop: '4px' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+          <Input 
+            label="Transaction Date" 
+            type="date" 
+            value={purchaseDate} 
+            onChange={(e) => setPurchaseDate(e.target.value)} 
+            style={{ flex: 1.2 }} 
+          />
+          <Input 
+            label="Time" 
+            type="time" 
+            value={purchaseTime} 
+            onChange={(e) => setPurchaseTime(e.target.value)} 
+            style={{ flex: 0.8 }} 
+          />
+        </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <Select label="Status" options={[{ value: 'paid', label: '✅ Paid' }, { value: 'partial', label: '⏳ Partial' }, { value: 'unpaid', label: '❌ Unpaid' }]} value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value as any)} style={{ flex: 1 }} />
           <Select label="Method" options={[{ value: 'cash', label: '💵 Cash' }, { value: 'upi', label: '📱 UPI' }, { value: 'card', label: '💳 Card' }, { value: 'credit', label: '📒 Credit' }]} value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as any)} style={{ flex: 1 }} />
