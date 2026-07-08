@@ -52,7 +52,7 @@ export const ExpensesPage: React.FC = () => {
   const totalExpenseSum = filtered.reduce((sum, e) => sum + e.amount, 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="animate-fade-in">
+    <div className="responsive-page-container animate-fade-in">
       <div className="flex-between">
         <div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Cost Book</span>
@@ -95,7 +95,7 @@ export const ExpensesPage: React.FC = () => {
           No expense entries found
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="responsive-list-grid">
           {filtered.map(exp => (
             <ExpenseCard
               key={exp.id}

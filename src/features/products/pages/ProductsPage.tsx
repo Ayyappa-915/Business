@@ -83,7 +83,7 @@ export const ProductsPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="animate-fade-in">
+    <div className="responsive-page-container animate-fade-in">
       
       <div className="flex-between">
         <div>
@@ -153,7 +153,7 @@ export const ProductsPage: React.FC = () => {
           No products found in catalog
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="responsive-list-grid">
           {filteredProducts.map(p => (
             <ProductCard
               key={p.id}

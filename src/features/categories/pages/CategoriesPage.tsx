@@ -65,7 +65,7 @@ export const CategoriesPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="animate-fade-in">
+    <div className="responsive-page-container animate-fade-in">
       
       <div className="flex-between">
         <div>
@@ -88,7 +88,7 @@ export const CategoriesPage: React.FC = () => {
           No categories found
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="responsive-list-grid">
           {filtered.map(cat => (
             <div key={cat.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div className="flex-between">

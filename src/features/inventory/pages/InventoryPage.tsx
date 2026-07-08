@@ -312,7 +312,7 @@ export const InventoryPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="animate-fade-in">
+    <div className="responsive-page-container animate-fade-in">
       
       <SegmentedControl
         options={[
@@ -469,7 +469,7 @@ export const InventoryPage: React.FC = () => {
           No inventory stock rows match filters
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="responsive-list-grid">
           {filteredVariants.map(v => {
             const p = products.find(prod => prod.id === v.productId);
             if (!p) return null;

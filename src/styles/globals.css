@@ -72,6 +72,18 @@ a {
 }
 
 /* Base Page Layouts */
+.responsive-list-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.responsive-page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .app-container {
   display: flex;
   flex-direction: column;
@@ -421,5 +433,18 @@ a {
   .dashboard-charts-grid {
     grid-template-columns: 1.6fr 1fr;
     align-items: start;
+  }
+
+  .responsive-list-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  .responsive-page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    gap: 16px;
   }
 }

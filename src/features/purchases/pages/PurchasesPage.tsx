@@ -83,7 +83,7 @@ export const PurchasesPage: React.FC = () => {
   });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="animate-fade-in">
+    <div className="responsive-page-container animate-fade-in">
       <div className="flex-between">
         <div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Expenses & Invoices</span>
@@ -141,7 +141,7 @@ export const PurchasesPage: React.FC = () => {
           No purchase logs found for this filter
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="responsive-list-grid">
           {filtered.map(p => (
             <PurchaseCard
               key={p.id}

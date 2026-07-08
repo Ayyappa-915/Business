@@ -89,7 +89,7 @@ export const SubcategoriesPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="animate-fade-in">
+    <div className="responsive-page-container animate-fade-in">
       <div className="flex-between">
         <div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Catalog Grouping</span>
@@ -120,7 +120,7 @@ export const SubcategoriesPage: React.FC = () => {
           No subcategories found
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="responsive-list-grid">
           {filtered.map(sub => {
             const cat = categories.find(c => c.id === sub.categoryId);
             return (

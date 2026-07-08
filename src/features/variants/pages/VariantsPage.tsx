@@ -223,7 +223,7 @@ export const VariantsPage: React.FC = () => {
   const newProductUnit = selectedNewProduct ? units.find(u => u.id === selectedNewProduct.unitId) : null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minHeight: '80vh', paddingBottom: '90px', paddingTop: '6px' }} className="animate-fade-in">
+    <div className="responsive-page-container animate-fade-in" style={{ minHeight: '80vh', paddingBottom: '90px', paddingTop: '6px' }}>
       <div className="flex-between">
         <div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Catalog Administration</span>
@@ -269,7 +269,7 @@ export const VariantsPage: React.FC = () => {
           No variants found matching criteria.
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="responsive-list-grid" style={{ gap: '16px' }}>
           {Object.entries(groupedVariants).map(([productId, vars]) => {
             const prodName = getProductName(productId);
             const isCollapsed = !!collapsedGroups[productId];

@@ -67,7 +67,7 @@ export const UsersPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="animate-fade-in">
+    <div className="responsive-page-container animate-fade-in">
       <div className="flex-between">
         <div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Staff Credentials</span>
@@ -89,7 +89,7 @@ export const UsersPage: React.FC = () => {
           No registered staff members found
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="responsive-list-grid">
           {filtered.map(usr => (
             <div key={usr.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div className="flex-between">
