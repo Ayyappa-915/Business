@@ -276,12 +276,12 @@ export const PurchasesPage: React.FC = () => {
 
       <ConfirmDialog
         isOpen={isDeleteConfirmOpen}
-        onClose={() => setIsDeleteConfirmOpen(false)}
+        onCancel={() => setIsDeleteConfirmOpen(false)}
         onConfirm={handleDeletePurchase}
         title="Delete Purchase"
         message="Are you sure you want to delete this purchase? This will revert stocks and cannot be undone."
-        confirmText="Delete"
-        type="danger"
+        confirmLabel="Delete"
+        isDanger={true}
       />
     </div>
   );

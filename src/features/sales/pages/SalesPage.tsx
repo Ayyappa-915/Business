@@ -314,12 +314,12 @@ export const SalesPage: React.FC = () => {
 
       <ConfirmDialog
         isOpen={isDeleteConfirmOpen}
-        onClose={() => setIsDeleteConfirmOpen(false)}
+        onCancel={() => setIsDeleteConfirmOpen(false)}
         onConfirm={handleDeleteSale}
         title="Delete Invoice"
         message="Are you sure you want to delete this invoice? This will refund stocks and cannot be undone."
-        confirmText="Delete"
-        type="danger"
+        confirmLabel="Delete"
+        isDanger={true}
       />
 
 
