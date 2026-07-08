@@ -48,17 +48,27 @@ a {
   text-decoration: none;
 }
 
-/* Hide Scrollbar for Chrome, Safari and Opera */
+/* Beautiful Premium Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--bg-secondary);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-color);
+  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-soft) 100%);
   border-radius: var(--radius-full);
+  border: 2px solid var(--bg-secondary);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Firefox Scrollbar Support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-soft) var(--bg-secondary);
 }
 
 /* Base Page Layouts */
