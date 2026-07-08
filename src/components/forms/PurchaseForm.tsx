@@ -43,6 +43,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
   const [exchangedMode, setExchangedMode] = useState<'catalog' | 'free'>('catalog');
 
   // ── Catalog-linked entry fields ─────────────────────────────────────────
+  const [selectedCatalogCategoryId, setSelectedCatalogCategoryId] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedVariantId, setSelectedVariantId] = useState('');
   const [catalogQty, setCatalogQty] = useState('1');
@@ -81,8 +82,15 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
   });
 
   // ── Derived options ─────────────────────────────────────────────────────
-  // Only exchanged, stock-tracked products
-  const catalogProducts = products;
+  // Exchanged categories to group products
+  const exchangedCategoryOptions = categories
+    .filter(c => c.type === 'exchanged')
+    .map(c => ({ value: c.id, label: c.name }));
+
+  // Only exchanged, stock-tracked products belonging to the selected category
+  const catalogProducts = selectedCatalogCategoryId
+    ? products.filter(p => p.categoryId === selectedCatalogCategoryId)
+    : [];
   const productOptions = catalogProducts.map(p => ({ value: p.id, label: p.name }));
 
   // Variants for selected product (allow purchasing any variant regardless of purpose)
@@ -102,11 +110,23 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
     .filter(c => c.type === 'prepared')
     .map(c => ({ value: c.id, label: c.name }));
 
+  // When catalog category changes, reset product & variant selection
+  const handleCatalogCategoryChange = (catId: string) => {
+    setSelectedCatalogCategoryId(catId);
+    setSelectedProductId('');
+    setSelectedVariantId('');
+    setCatalogCost('');
+    setCatalogTotalCost('');
+    setCatalogPieces('');
+  };
+
   // When product changes, reset variant
   const handleProductChange = (id: string) => {
     setSelectedProductId(id);
     setSelectedVariantId('');
     setCatalogCost('');
+    setCatalogTotalCost('');
+    setCatalogPieces('');
   };
 
   // When variant changes, pre-fill cost
@@ -229,6 +249,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
       ]);
     }
 
+    setSelectedProductId('');
     setSelectedVariantId('');
     setCatalogQty('1');
     setCatalogCost('');
@@ -450,12 +471,23 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
               </div>
 
               <Select
-                label="Product"
-                options={productOptions}
-                value={selectedProductId}
-                onChange={(e) => handleProductChange(e.target.value)}
-                placeholder="Select product..."
+                label="Product Category"
+                options={exchangedCategoryOptions}
+                value={selectedCatalogCategoryId}
+                onChange={(e) => handleCatalogCategoryChange(e.target.value)}
+                placeholder="Select category..."
               />
+
+              {selectedCatalogCategoryId && (
+                <Select
+                  label="Product"
+                  options={productOptions}
+                  value={selectedProductId}
+                  onChange={(e) => handleProductChange(e.target.value)}
+                  placeholder="Select product..."
+                  helperText={catalogProducts.length === 0 ? 'No products found in this category' : undefined}
+                />
+              )}
 
               {selectedProductId && (
                 <Select
